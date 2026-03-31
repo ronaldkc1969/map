@@ -97,4 +97,113 @@
         {id:9, n:"栃木県", nr:"とちぎけん", c:"宇都宮市", cr:"うつのみやし"}, {id:10, n:"群馬県", nr:"ぐんまけん", c:"前橋市", cr:"まえばしし"},
         {id:11, n:"埼玉県", nr:"さいたまけん", c:"さいたま市", cr:"さいたまし"}, {id:12, n:"千葉県", nr:"ちばけん", c:"千葉市", cr:"ちばし"},
         {id:13, n:"東京都", nr:"とうきょうと", c:"新宿区", cr:"しんじゅくく"}, {id:14, n:"神奈川県", nr:"かながわけん", c:"横浜市", cr:"よこはまし"},
-        {id:15, n:"新潟県", nr:"にいがたけん", c:"新潟市", cr:"にいがたし"}, {id:16, n:"富山県", nr:"とやまけん", c:"富山市", cr:"とやまし
+        {id:15, n:"新潟県", nr:"にいがたけん", c:"新潟市", cr:"にいがたし"}, {id:16, n:"富山県", nr:"とやまけん", c:"富山市", cr:"とやまし"},
+        {id:17, n:"石川県", nr:"いしかわけん", c:"金沢市", cr:"かなざわし"}, {id:18, n:"福井県", nr:"ふくいけん", c:"福井市", cr:"ふくいし"},
+        {id:19, n:"山梨県", nr:"やまなしけん", c:"甲府市", cr:"こうふし"}, {id:20, n:"長野県", nr:"ながのけん", c:"長野市", cr:"ながのし"},
+        {id:21, n:"岐阜県", nr:"ぎふけん", c:"岐阜市", cr:"ぎふし"}, {id:22, n:"静岡県", nr:"しずおかけん", c:"静岡市", cr:"しずおかし"},
+        {id:23, n:"愛知県", nr:"あいちけん", c:"名古屋市", cr:"なごやし"}, {id:24, n:"三重県", nr:"みえけん", c:"津市", cr:"つし"},
+        {id:25, n:"滋賀県", nr:"しがけん", c:"大津市", cr:"おおつし"}, {id:26, n:"京都府", nr:"きょうとふ", c:"京都市", cr:"きょうとし"},
+        {id:27, n:"大阪府", nr:"おおさかふ", c:"大阪市", cr:"おおさかし"}, {id:28, n:"兵庫県", nr:"ひょうごけん", c:"神戸市", cr:"こうべし"},
+        {id:29, n:"奈良県", nr:"ならけん", c:"奈良市", cr:"ならし"}, {id:30, n:"和歌山県", nr:"わかやまけん", c:"和歌山市", cr:"わかやまし"},
+        {id:31, n:"鳥取県", nr:"とっとりけん", c:"鳥取市", cr:"とっとりし"}, {id:32, n:"島根県", nr:"しまねけん", c:"松江市", cr:"松江し"},
+        {id:33, n:"岡山県", nr:"おかやまけん", c:"岡山市", cr:"おかやまし"}, {id:34, n:"広島県", nr:"ひろしまけん", c:"広島市", cr:"広島し"},
+        {id:35, n:"山口県", nr:"やまぐちけん", c:"山口市", cr:"やまぐちし"}, {id:36, n:"徳島県", nr:"とくしまけん", c:"徳島市", cr:"とくしまし"},
+        {id:37, n:"香川県", nr:"かがわけん", c:"高松市", cr:"たかまつし"}, {id:38, n:"愛媛県", nr:"えひめけん", c:"松山市", cr:"まつやまし"},
+        {id:39, n:"高知県", nr:"こうちけん", c:"高知市", cr:"こうちし"}, {id:40, n:"福岡県", nr:"ふくおかけん", c:"福岡市", cr:"ふくおかし"},
+        {id:41, n:"佐賀県", nr:"さがけん", c:"佐賀市", cr:"さがし"}, {id:42, n:"長崎県", nr:"ながさきけん", c:"長崎市", cr:"ながさきし"},
+        {id:43, n:"熊本県", nr:"くまもとけん", c:"熊本市", cr:"くまもとし"}, {id:44, n:"大分県", nr:"おおいたけん", c:"大分市", cr:"おおいたし"},
+        {id:45, n:"宮崎県", nr:"みやざきけん", c:"宮崎市", cr:"宮崎し"}, {id:46, n:"鹿児島県", nr:"かごしまけん", c:"鹿児島市", cr:"鹿児島し"},
+        {id:47, n:"沖縄県", nr:"おきなわけん", c:"那覇市", cr:"なはし"}
+    ];
+
+    const praises = ["すごーい！天才だね！", "やったね！大正解！", "すばらしい！その調子！", "完ペキ！地図マスターだね！", "大正解！かっこいいー！"];
+    let mode = ''; let current = {}; let correctIdx = 0; let synth = window.speechSynthesis;
+
+    // ゲーム開始
+    function initGame(m) {
+        mode = m;
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        nextQuestion();
+    }
+
+    // 次の問題へ
+    function nextQuestion() {
+        document.querySelectorAll('.active-pref').forEach(p => p.classList.remove('active-pref')); // 地図の光を消す
+        document.getElementById('choice-section').style.display = 'none';
+        document.getElementById('self-judge-section').style.display = 'none';
+        document.getElementById('result-msg').style.display = 'none';
+        document.getElementById('action-btns').style.display = 'block';
+
+        // 完全にランダムに出題
+        current = masterData[Math.floor(Math.random() * masterData.length)];
+        
+        if (mode === 'location') {
+            document.getElementById('japan-map').parentElement.style.display = 'block';
+            document.getElementById('p' + current.id).classList.add('active-pref'); // 正解の県を塗りつぶす
+            document.getElementById('q-text').innerHTML = `赤く光っているところの<br><ruby>都道<rt>とどう</rt>府<rt>ふ</rt>県<rt>けん</rt>名<rt>めい</rt></ruby>は？`;
+        } else {
+            document.getElementById('japan-map').parentElement.style.display = 'none'; // 地図を隠す
+            document.getElementById('q-text').innerHTML = `<ruby>${current.n}<rt>${current.nr}</rt></ruby>の<br><ruby>県庁<rt>けんちょう</rt>所在地<rt>しょざいち</rt></ruby>は？`;
+        }
+    }
+
+    // ヒント（2択）を表示
+    function showHintChoices() {
+        document.getElementById('action-btns').style.display = 'none';
+        document.getElementById('choice-section').style.display = 'block';
+        
+        let wrong = masterData.filter(p => p.id !== current.id)[Math.floor(Math.random() * 46)];
+        correctIdx = Math.floor(Math.random() * 2);
+        const choices = [];
+        if (mode === 'location') {
+            choices[correctIdx] = `<ruby>${current.n}<rt>${current.nr}</rt></ruby>`;
+            choices[1 - correctIdx] = `<ruby>${wrong.n}<rt>${wrong.nr}</rt></ruby>`;
+        } else {
+            choices[correctIdx] = `<ruby>${current.c}<rt>${current.cr}</rt></ruby>`;
+            choices[1 - correctIdx] = `<ruby>${wrong.c}<rt>${wrong.cr}</rt></ruby>`;
+        }
+        document.getElementById('c1').innerHTML = choices[0];
+        document.getElementById('c2').innerHTML = choices[1];
+    }
+
+    function checkChoice(idx) {
+        if (idx === correctIdx) judgeFinal(true);
+        else judgeFinal(false);
+    }
+
+    // 自力回答（こたえをみる）
+    function showAnswerSelf() {
+        document.getElementById('action-btns').style.display = 'none';
+        const ans = mode === 'location' ? `${current.n} (${current.nr})` : `${current.c} (${current.cr})`;
+        document.getElementById('result-msg').style.display = 'block';
+        document.getElementById('result-msg').innerHTML = `<span style="font-size:16px; color:#666;">こたえ：</span><br>${ans}`;
+        document.getElementById('self-judge-section').style.display = 'block';
+    }
+
+    // 最終判定
+    function judgeFinal(isCorrect) {
+        document.getElementById('choice-section').style.display = 'none';
+        document.getElementById('self-judge-section').style.display = 'none';
+        document.getElementById('result-msg').style.display = 'block';
+        
+        if (isCorrect) {
+            document.getElementById('result-msg').innerHTML = `<span style="color:red">⭕ せいかい！</span><br><span style="font-size:18px">${mode==='location'?current.n:current.c}</span>`;
+            speak(praises[Math.floor(Math.random() * praises.length)]); // ランダムに褒める
+        } else {
+            document.getElementById('result-msg').innerHTML = `<span style="color:blue">❌ 残念！</span><br><span style="font-size:16px">正解は ${mode==='location'?current.n:current.c} だよ</span>`;
+            speak("次はがんばろう！");
+        }
+    }
+
+    // 音声読み上げ
+    function speak(txt) {
+        if (synth.speaking) synth.cancel();
+        let u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'ja-JP'; u.pitch = 1.3;
+        synth.speak(u);
+    }
+</script>
+
+</body>
+</html>
