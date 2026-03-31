@@ -1,209 +1,327 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>たのしい！都道府県クイズ</title>
-    <style>
-        :root { --main-blue: #3498db; --main-red: #e74c3c; --bg-color: #f7f9fc; }
-        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background-color: var(--bg-color); text-align: center; margin: 0; padding: 15px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 2px solid var(--main-blue); padding-bottom: 10px; margin-top: 0; }
-        
-        /* 地図エリア */
-        #map-area { width: 100%; max-width: 600px; margin: 15px auto; border: 1px solid #ccc; background: #fff; border-radius: 10px; padding: 5px; }
-        svg { width: 100%; height: auto; stroke-linejoin: round; }
-        /* 白地図の基本スタイル */
-        .pref-path { fill: #fdfdfd; stroke: #444; stroke-width: 0.4; transition: fill 0.3s; }
-        /* 正解の都道府県を塗りつぶすスタイル */
-        .active-pref { fill: #ff6b6b !important; stroke: #c0392b; stroke-width: 1.0; animation: flash 1.5s infinite alternate; }
-        @keyframes flash { from { fill: #ff6b6b; } to { fill: #ff8787; } }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>都道府県クイズ</title>
+<style>
+  /* ===== リセット・基本 ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Hiragino Maru Gothic ProN', 'BIZ UDPGothic', sans-serif;
+    background: linear-gradient(135deg, #e0f7fa 0%, #e8f5e9 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-        /* 問題文・テキスト */
-        .question-box { font-size: 24px; font-weight: bold; margin: 15px 0; min-height: 70px; line-height: 1.6; color: #333; }
-        ruby rt { font-size: 0.5em; color: #7f8c8d; }
+  /* ===== ヘッダー ===== */
+  header {
+    width: 100%;
+    background: linear-gradient(90deg, #1976d2, #42a5f5);
+    color: #fff;
+    text-align: center;
+    padding: 14px 20px;
+    font-size: 1.6rem;
+    font-weight: bold;
+    letter-spacing: 3px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  }
 
-        /* ボタン類 */
-        .btn { padding: 12px 24px; font-size: 18px; cursor: pointer; border-radius: 12px; border: none; transition: 0.2s; margin: 5px; font-weight: bold; box-shadow: 0 3px #ccc; }
-        .btn:active { transform: translateY(2px); box-shadow: 0 1px #ccc; }
-        .btn-menu { width: 85%; background: var(--main-blue); color: white; max-width: 300px; }
-        .btn-hint { background: #9b59b6; color: white; }
-        .btn-ans { background: #34495e; color: white; }
-        .btn-choice { background: #f8f9fa; border: 2px solid #ddd; width: 180px; box-shadow: none; color: #333; }
-        .btn-correct { background: #2ecc71; color: white; padding: 15px 40px; font-size: 22px; }
-        .btn-wrong { background: #e67e22; color: white; padding: 15px 40px; font-size: 22px; }
-        
-        #choice-section, #self-judge-section, #result-msg { display: none; margin-top: 15px; }
-        #result-msg { font-size: 30px; font-weight: bold; }
-        .next-box { margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 10px; }
+  /* ===== モード選択 ===== */
+  #mode-select {
+    display: flex;
+    gap: 24px;
+    margin: 40px auto 0;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    padding: 24px 36px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .mode-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+  #btn-map-mode  { background: linear-gradient(135deg, #ff8f00, #ffd54f); color: #333; }
+  #btn-capital-mode { background: linear-gradient(135deg, #388e3c, #a5d6a7); color: #fff; }
+  .mode-icon { font-size: 2.8rem; display: block; margin-bottom: 8px; }
 
-        #menu-screen { display: block; }
-        #game-screen { display: none; }
-    </style>
+  /* ===== クイズ画面共通 ===== */
+  #quiz-screen {
+    display: none;
+    width: 100%;
+    max-width: 1100px;
+    padding: 16px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== スコアバー ===== */
+  #score-bar {
+    display: flex;
+    gap: 24px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    background: rgba(255,255,255,0.8);
+    padding: 10px 28px;
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 14px;
+  }
+  .score-correct { color: #2e7d32; }
+  .score-wrong   { color: #c62828; }
+
+  /* ===== 問題文 ===== */
+  #question-box {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px 32px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1a237e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    margin-bottom: 14px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  /* ===== 地図エリア ===== */
+  #map-container {
+    width: 100%;
+    max-width: 680px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    overflow: hidden;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  #map-container svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  /* 都道府県デフォルト */
+  #map-container .prefecture {
+    fill: #c8e6c9;
+    stroke: #fff;
+    stroke-width: 1;
+    cursor: pointer;
+    transition: fill .15s;
+  }
+  #map-container .prefecture:hover { fill: #80cbc4; }
+  /* 正解都道府県（問題に光る） */
+  #map-container .prefecture.target  { fill: #ff7043; }
+  /* ユーザーがクリックした選択中 */
+  #map-container .prefecture.selected { fill: #1e88e5; }
+  /* 正解演出 */
+  #map-container .prefecture.correct-flash { fill: #ffd600 !important; }
+
+  /* ===== 県庁クイズ用 テキスト入力 ===== */
+  #capital-area {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    width: 100%;
+    max-width: 500px;
+  }
+  #capital-input {
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 14px 20px;
+    border: 3px solid #1976d2;
+    border-radius: 14px;
+    text-align: center;
+    outline: none;
+    background: #fff;
+  }
+  #capital-input:focus { border-color: #ff6f00; box-shadow: 0 0 0 3px rgba(255,111,0,0.2); }
+
+  /* ===== ボタン群 ===== */
+  #action-btns {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .action-btn {
+    padding: 14px 28px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .action-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.2); }
+  .action-btn:disabled { opacity: .45; cursor: default; transform: none; }
+  #btn-answer  { background: linear-gradient(135deg,#ff8f00,#ffd54f); color:#333; }
+  #btn-hint    { background: linear-gradient(135deg,#6a1b9a,#ce93d8); color:#fff; }
+  #btn-next    { background: linear-gradient(135deg,#1565c0,#64b5f6); color:#fff; display:none; }
+  #btn-back    { background: #90a4ae; color:#fff; margin-top:6px; }
+
+  /* ===== ヒントボックス ===== */
+  #hint-box {
+    display: none;
+    background: #f3e5f5;
+    border: 2px solid #ab47bc;
+    border-radius: 16px;
+    padding: 16px 28px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #4a148c;
+    text-align: center;
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 500px;
+  }
+  .hint-choices { display: flex; gap: 16px; margin-top: 12px; justify-content: center; flex-wrap: wrap; }
+  .hint-choice-btn {
+    padding: 10px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    background: #fff;
+    color: #4a148c;
+    border: 2px solid #ab47bc;
+    transition: background .12s;
+  }
+  .hint-choice-btn:hover { background: #ce93d8; color: #fff; }
+
+  /* ===== 正解/不正解フィードバック ===== */
+  #feedback-box {
+    display: none;
+    font-size: 1.8rem;
+    font-weight: bold;
+    padding: 18px 36px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 12px;
+    animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
+    width: 100%;
+    max-width: 600px;
+  }
+  #feedback-box.correct { background: linear-gradient(135deg,#fffde7,#fff9c4); color:#f57f17; border: 3px solid #fbc02d; }
+  #feedback-box.wrong   { background: linear-gradient(135deg,#fce4ec,#f8bbd0); color:#b71c1c; border: 3px solid #e91e63; }
+  @keyframes popIn {
+    0%   { transform: scale(.5); opacity:0; }
+    100% { transform: scale(1);  opacity:1; }
+  }
+
+  /* ===== 自己判定ボタン（正解/不正解を自分で押す） ===== */
+  #self-judge {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    width: 100%;
+  }
+  #self-judge p { font-size: 1.1rem; color: #333; font-weight: bold; }
+  #self-judge .judge-btns { display: flex; gap: 20px; }
+  .judge-btn {
+    padding: 14px 36px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: transform .12s;
+  }
+  .judge-btn:hover { transform: translateY(-3px); }
+  #btn-judge-ok  { background: linear-gradient(135deg,#2e7d32,#a5d6a7); color:#fff; }
+  #btn-judge-ng  { background: linear-gradient(135deg,#b71c1c,#ef9a9a); color:#fff; }
+
+  /* ===== 褒め演出オーバーレイ ===== */
+  #praise-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #praise-overlay.show { display: flex; }
+  #praise-card {
+    background: linear-gradient(135deg,#fff9c4,#fff3e0,#fce4ec);
+    border-radius: 28px;
+    padding: 40px 60px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    animation: zoomIn .5s cubic-bezier(.175,.885,.32,1.275);
+    max-width: 480px;
+  }
+  @keyframes zoomIn {
+    0%   { transform: scale(.3) rotate(-8deg); opacity:0; }
+    100% { transform: scale(1) rotate(0deg);   opacity:1; }
+  }
+  #praise-emoji { font-size: 5rem; display: block; margin-bottom: 12px; animation: spin 1s ease-out; }
+  @keyframes spin { from{transform:rotate(-20deg) scale(.5)} to{transform:rotate(0) scale(1)} }
+  #praise-text  { font-size: 2rem; font-weight: bold; color: #e65100; margin-bottom: 8px; }
+  #praise-sub   { font-size: 1.2rem; color: #555; }
+  #praise-close {
+    margin-top: 20px;
+    padding: 12px 36px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    background: linear-gradient(135deg,#1565c0,#64b5f6);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+
+  /* ===== 花火キャンバス ===== */
+  #fireworks { position: fixed; inset:0; pointer-events:none; z-index:99; }
+
+  /* ===== レスポンシブ ===== */
+  @media(max-width:600px){
+    header { font-size:1.2rem; }
+    #question-box { font-size:1.2rem; padding:14px 18px; }
+    .mode-btn { padding:18px 24px; font-size:1.1rem; }
+    #praise-card { padding:28px 28px; }
+    #praise-text { font-size:1.5rem; }
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
-    <div id="menu-screen">
-        <h1>🗾 都道<ruby>府県<rt>ふけん</rt></ruby>クイズ 🗾</h1>
-        <p>小<ruby>学<rt>がく</rt></ruby>4年生向け学習アプリ</p>
-        <button class="btn btn-menu" onclick="initGame('location')">📍 場所クイズをはじめる</button><br>
-        <button class="btn btn-menu" onclick="initGame('capital')">🏢 県庁所在地クイズをはじめる</button>
-    </div>
+<header>🗾 都道府県クイズ</header>
+anvas id="fireworks"></canvas>
 
-    <div id="game-screen">
-        <div id="map-area">
-            <svg viewBox="0 0 1000 850" xmlns="http://www.w3.org/2000/svg">
-                <g id="japan-map">
-                    <path id="p1" class="pref-path" d="M810 10l15 5 10 20 15 15-5 35-25 10-20-10-15-30-20-10-10 10-25-10-5-25 15-20 15-10z"/><path id="p2" class="pref-path" d="M720 160l20 20 15 40-30 15-25-10-10-30z"/><path id="p3" class="pref-path" d="M740 230l15 60-35 15-10-60z"/><path id="p4" class="pref-path" d="M730 300l10 50-35 10-10-50z"/><path id="p5" class="pref-path" d="M700 230l20 5-5 60-30 10-10-45z"/><path id="p6" class="pref-path" d="M695 305l20 5-10 50-30 10-10-45z"/><path id="p7" class="pref-path" d="M690 365l40 10 10 50-60 20-15-40z"/><path id="p8" class="pref-path" d="M700 440l20 25-10 50-25-10z"/><path id="p9" class="pref-path" d="M675 440l20 5-5 45-20-5z"/><path id="p10" class="pref-path" d="M650 440l25 10-5 40-25-5z"/><path id="p11" class="pref-path" d="M650 490l40 10-5 25-45-5z"/><path id="p12" class="pref-path" d="M710 495l15 50-30 30-15-50z"/><path id="p13" class="pref-path" d="M660 515l35 10-5 20-35-5z"/><path id="p14" class="pref-path" d="M655 540l25 15-15 25-15-15z"/><path id="p15" class="pref-path" d="M640 350l30 15-20 60-40-20z"/><path id="p16" class="pref-path" d="M590 395l30 15-10 40-25-20z"/><path id="p17" class="pref-path" d="M565 375l20 20-10 60-30-10z"/><path id="p18" class="pref-path" d="M545 440l30 15-10 50-25-20z"/><path id="p19" class="pref-path" d="M635 500l20 5-5 35-20-5z"/><path id="p20" class="pref-path" d="M610 450l40 15-20 90-30-30z"/><path id="p21" class="pref-path" d="M580 460l35 15-20 70-30-10z"/><path id="p22" class="pref-path" d="M620 550l40 20-30 40-20-30z"/><path id="p23" class="pref-path" d="M590 550l30 15-20 40-20-25z"/><path id="p24" class="pref-path" d="M560 550l30 10-20 65-20-15z"/><path id="p25" class="pref-path" d="M555 500l25 15-10 40-15-15z"/><path id="p26" class="pref-path" d="M525 500l30 10-10 50-25-10z"/><path id="p27" class="pref-path" d="M525 560l25 10-10 40-20-10z"/><path id="p28" class="pref-path" d="M490 500l35 5 20 60-30 30-20-60z"/><path id="p29" class="pref-path" d="M545 565l20 10-10 50-20-10z"/><path id="p30" class="pref-path" d="M520 610l25 20-15 50-20-20z"/><path id="p31" class="pref-path" d="M450 500l40 10-10 35-35-10z"/><path id="p32" class="pref-path" d="M390 510l60 10-10 35-50-10z"/><path id="p33" class="pref-path" d="M440 545l45 10-10 45-40-10z"/><path id="p34" class="pref-path" d="M390 555l50 10-15 45-45-10z"/><path id="p35" class="pref-path" d="M340 550l50 10-15 50-45-15z"/><path id="p36" class="pref-path" d="M410 635l40 10-20 30-25-5z"/><path id="p37" class="pref-path" d="M400 615l45 10-15 20-30-10z"/><path id="p38" class="pref-path" d="M345 625l55 10-20 40-40-20z"/><path id="p39" class="pref-path" d="M360 675l60 10-20 45-50-15z"/><path id="p40" class="pref-path" d="M290 575l40 15-20 40-25-15z"/><path id="p41" class="pref-path" d="M255 590l35 10-10 30-25-15z"/><path id="p42" class="pref-path" d="M240 615l25 10-15 45-20-20z"/><path id="p43" class="pref-path" d="M260 635l35 15-10 60-30-25z"/><path id="p44" class="pref-path" d="M310 620l30 15-15 60-20-30z"/><path id="p45" class="pref-path" d="M300 700l25 15-10 70-20-25z"/><path id="p46" class="pref-path" d="M260 720l35 15-15 70-35-25z"/><path id="p47" class="pref-path" d="M100 700l40 10-10 15-40-10z"/></g>
-            </svg>
-        </div>
-
-        <div class="question-box" id="q-text"></div>
-
-        <div id="action-btns">
-            <button class="btn btn-show" onclick="showAnswerSelf()">👁️ こたえをみる</button>
-            <button class="btn btn-hint" onclick="showHintChoices()">💡 ヒント (2択)</button>
-        </div>
-
-        <div id="choice-section">
-            <p>どっちかな？</p>
-            <button id="c1" class="btn btn-choice" onclick="checkChoice(0)"></button>
-            <button id="c2" class="btn btn-choice" onclick="checkChoice(1)"></button>
-        </div>
-
-        <div id="self-judge-section">
-            <p>せいかい できたかな？</p>
-            <button class="btn btn-correct" onclick="judgeFinal(true)">⭕ できた！</button>
-            <button class="btn btn-wrong" onclick="judgeFinal(false)">❌ だめだった</button>
-        </div>
-
-        <div id="result-msg"></div>
-
-        <div class="next-box">
-            <button class="btn btn-menu" style="width:auto;" onclick="nextQuestion()">つぎの問題へ 👉</button><br>
-            <button onclick="location.reload()" style="background:none; border:none; color:#3498db; text-decoration:underline; cursor:pointer; margin-top:10px;">メニューにもどる</button>
-        </div>
-    </div>
+<!-- ===== モード選択 ===== -->
+<div id="mode-select">
+  <button class="mode-btn" id="btn-map-mode">
+    <span class="mode-icon">🗾</span>都道府県<br>場所クイズ
+  </button>
+  <button class="mode-btn" id="btn-capital-mode">
+    <span class="mode-icon">🏛️</span>県庁所在地<br>クイズ
+  </button>
 </div>
 
-<script>
-    // 全47都道府県データ（正確な形状の地図に対応）
-    const masterData = [
-        {id:1, n:"北海道", nr:"ほっかいどう", c:"札幌市", cr:"さっぽろし"}, {id:2, n:"青森県", nr:"あおもりけん", c:"青森市", cr:"あおもりし"},
-        {id:3, n:"岩手県", nr:"いわてけん", c:"盛岡市", cr:"もりおかし"}, {id:4, n:"宮城県", nr:"みやぎけん", c:"仙台市", cr:"せんだいし"},
-        {id:5, n:"秋田県", nr:"あきたけん", c:"秋田市", cr:"あきたし"}, {id:6, n:"山形県", nr:"やまがたけん", c:"山形市", cr:"やまがたし"},
-        {id:7, n:"福島県", nr:"ふくしまけん", c:"福島市", cr:"ふくしまし"}, {id:8, n:"茨城県", nr:"いばらきけん", c:"水戸市", cr:"みとし"},
-        {id:9, n:"栃木県", nr:"とちぎけん", c:"宇都宮市", cr:"うつのみやし"}, {id:10, n:"群馬県", nr:"ぐんまけん", c:"前橋市", cr:"まえばしし"},
-        {id:11, n:"埼玉県", nr:"さいたまけん", c:"さいたま市", cr:"さいたまし"}, {id:12, n:"千葉県", nr:"ちばけん", c:"千葉市", cr:"ちばし"},
-        {id:13, n:"東京都", nr:"とうきょうと", c:"新宿区", cr:"しんじゅくく"}, {id:14, n:"神奈川県", nr:"かながわけん", c:"横浜市", cr:"よこはまし"},
-        {id:15, n:"新潟県", nr:"にいがたけん", c:"新潟市", cr:"にいがたし"}, {id:16, n:"富山県", nr:"とやまけん", c:"富山市", cr:"とやまし"},
-        {id:17, n:"石川県", nr:"いしかわけん", c:"金沢市", cr:"かなざわし"}, {id:18, n:"福井県", nr:"ふくいけん", c:"福井市", cr:"ふくいし"},
-        {id:19, n:"山梨県", nr:"やまなしけん", c:"甲府市", cr:"こうふし"}, {id:20, n:"長野県", nr:"ながのけん", c:"長野市", cr:"ながのし"},
-        {id:21, n:"岐阜県", nr:"ぎふけん", c:"岐阜市", cr:"ぎふし"}, {id:22, n:"静岡県", nr:"しずおかけん", c:"静岡市", cr:"しずおかし"},
-        {id:23, n:"愛知県", nr:"あいちけん", c:"名古屋市", cr:"なごやし"}, {id:24, n:"三重県", nr:"みえけん", c:"津市", cr:"つし"},
-        {id:25, n:"滋賀県", nr:"しがけん", c:"大津市", cr:"おおつし"}, {id:26, n:"京都府", nr:"きょうとふ", c:"京都市", cr:"きょうとし"},
-        {id:27, n:"大阪府", nr:"おおさかふ", c:"大阪市", cr:"おおさかし"}, {id:28, n:"兵庫県", nr:"ひょうごけん", c:"神戸市", cr:"こうべし"},
-        {id:29, n:"奈良県", nr:"ならけん", c:"奈良市", cr:"ならし"}, {id:30, n:"和歌山県", nr:"わかやまけん", c:"和歌山市", cr:"わかやまし"},
-        {id:31, n:"鳥取県", nr:"とっとりけん", c:"鳥取市", cr:"とっとりし"}, {id:32, n:"島根県", nr:"しまねけん", c:"松江市", cr:"松江し"},
-        {id:33, n:"岡山県", nr:"おかやまけん", c:"岡山市", cr:"おかやまし"}, {id:34, n:"広島県", nr:"ひろしまけん", c:"広島市", cr:"広島し"},
-        {id:35, n:"山口県", nr:"やまぐちけん", c:"山口市", cr:"やまぐちし"}, {id:36, n:"徳島県", nr:"とくしまけん", c:"徳島市", cr:"とくしまし"},
-        {id:37, n:"香川県", nr:"かがわけん", c:"高松市", cr:"たかまつし"}, {id:38, n:"愛媛県", nr:"えひめけん", c:"松山市", cr:"まつやまし"},
-        {id:39, n:"高知県", nr:"こうちけん", c:"高知市", cr:"こうちし"}, {id:40, n:"福岡県", nr:"ふくおかけん", c:"福岡市", cr:"ふくおかし"},
-        {id:41, n:"佐賀県", nr:"さがけん", c:"佐賀市", cr:"さがし"}, {id:42, n:"長崎県", nr:"ながさきけん", c:"長崎市", cr:"ながさきし"},
-        {id:43, n:"熊本県", nr:"くまもとけん", c:"熊本市", cr:"くまもとし"}, {id:44, n:"大分県", nr:"おおいたけん", c:"大分市", cr:"おおいたし"},
-        {id:45, n:"宮崎県", nr:"みやざきけん", c:"宮崎市", cr:"宮崎し"}, {id:46, n:"鹿児島県", nr:"かごしまけん", c:"鹿児島市", cr:"鹿児島し"},
-        {id:47, n:"沖縄県", nr:"おきなわけん", c:"那覇市", cr:"なはし"}
-    ];
-
-    const praises = ["すごーい！天才だね！", "やったね！大正解！", "すばらしい！その調子！", "完ペキ！地図マスターだね！", "大正解！かっこいいー！"];
-    let mode = ''; let current = {}; let correctIdx = 0; let synth = window.speechSynthesis;
-
-    // ゲーム開始
-    function initGame(m) {
-        mode = m;
-        document.getElementById('menu-screen').style.display = 'none';
-        document.getElementById('game-screen').style.display = 'block';
-        nextQuestion();
-    }
-
-    // 次の問題へ
-    function nextQuestion() {
-        document.querySelectorAll('.active-pref').forEach(p => p.classList.remove('active-pref')); // 地図の光を消す
-        document.getElementById('choice-section').style.display = 'none';
-        document.getElementById('self-judge-section').style.display = 'none';
-        document.getElementById('result-msg').style.display = 'none';
-        document.getElementById('action-btns').style.display = 'block';
-
-        // 完全にランダムに出題
-        current = masterData[Math.floor(Math.random() * masterData.length)];
-        
-        if (mode === 'location') {
-            document.getElementById('japan-map').parentElement.style.display = 'block';
-            document.getElementById('p' + current.id).classList.add('active-pref'); // 正解の県を塗りつぶす
-            document.getElementById('q-text').innerHTML = `赤く光っているところの<br><ruby>都道<rt>とどう</rt>府<rt>ふ</rt>県<rt>けん</rt>名<rt>めい</rt></ruby>は？`;
-        } else {
-            document.getElementById('japan-map').parentElement.style.display = 'none'; // 地図を隠す
-            document.getElementById('q-text').innerHTML = `<ruby>${current.n}<rt>${current.nr}</rt></ruby>の<br><ruby>県庁<rt>けんちょう</rt>所在地<rt>しょざいち</rt></ruby>は？`;
-        }
-    }
-
-    // ヒント（2択）を表示
-    function showHintChoices() {
-        document.getElementById('action-btns').style.display = 'none';
-        document.getElementById('choice-section').style.display = 'block';
-        
-        let wrong = masterData.filter(p => p.id !== current.id)[Math.floor(Math.random() * 46)];
-        correctIdx = Math.floor(Math.random() * 2);
-        const choices = [];
-        if (mode === 'location') {
-            choices[correctIdx] = `<ruby>${current.n}<rt>${current.nr}</rt></ruby>`;
-            choices[1 - correctIdx] = `<ruby>${wrong.n}<rt>${wrong.nr}</rt></ruby>`;
-        } else {
-            choices[correctIdx] = `<ruby>${current.c}<rt>${current.cr}</rt></ruby>`;
-            choices[1 - correctIdx] = `<ruby>${wrong.c}<rt>${wrong.cr}</rt></ruby>`;
-        }
-        document.getElementById('c1').innerHTML = choices[0];
-        document.getElementById('c2').innerHTML = choices[1];
-    }
-
-    function checkChoice(idx) {
-        if (idx === correctIdx) judgeFinal(true);
-        else judgeFinal(false);
-    }
-
-    // 自力回答（こたえをみる）
-    function showAnswerSelf() {
-        document.getElementById('action-btns').style.display = 'none';
-        const ans = mode === 'location' ? `${current.n} (${current.nr})` : `${current.c} (${current.cr})`;
-        document.getElementById('result-msg').style.display = 'block';
-        document.getElementById('result-msg').innerHTML = `<span style="font-size:16px; color:#666;">こたえ：</span><br>${ans}`;
-        document.getElementById('self-judge-section').style.display = 'block';
-    }
-
-    // 最終判定
-    function judgeFinal(isCorrect) {
-        document.getElementById('choice-section').style.display = 'none';
-        document.getElementById('self-judge-section').style.display = 'none';
-        document.getElementById('result-msg').style.display = 'block';
-        
-        if (isCorrect) {
-            document.getElementById('result-msg').innerHTML = `<span style="color:red">⭕ せいかい！</span><br><span style="font-size:18px">${mode==='location'?current.n:current.c}</span>`;
-            speak(praises[Math.floor(Math.random() * praises.length)]); // ランダムに褒める
-        } else {
-            document.getElementById('result-msg').innerHTML = `<span style="color:blue">❌ 残念！</span><br><span style="font-size:16px">正解は ${mode==='location'?current.n:current.c} だよ</span>`;
-            speak("次はがんばろう！");
-        }
-    }
-
-    // 音声読み上げ
-    function speak(txt) {
-        if (synth.speaking) synth.cancel();
-        let u = new SpeechSynthesisUtterance(txt);
-        u.lang = 'ja-JP'; u.pitch = 1.3;
-        synth.speak(u);
-    }
-</script>
-
-</body>
-</html>
+<!-- ===== クイズ画面 ===== -->
+<div id="quiz-screen">
+  <div id="score-bar">
+    <span>⭐ <span id="score-correct">0</span>
