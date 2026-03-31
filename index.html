@@ -3,40 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小4向け：都道府県マスタークイズ</title>
+    <title>都道府県・県庁所在地クイズ</title>
     <style>
-        :root { --main-blue: #3498db; --main-red: #e74c3c; --bg-color: #f7f9fc; }
-        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background-color: var(--bg-color); text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 2px solid var(--main-blue); padding-bottom: 10px; }
+        :root { --main-blue: #3498db; --main-red: #e74c3c; --soft-bg: #fdfdfd; }
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background-color: #f0f4f8; text-align: center; margin: 0; padding: 15px; }
+        .container { max-width: 750px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        /* 地図エリア */
-        #map-area { width: 100%; max-width: 600px; margin: 20px auto; border: 1px solid #ccc; background: #fff; border-radius: 10px; padding: 10px; }
-        svg { width: 100%; height: auto; max-height: 450px; }
-        .pref-path { fill: #fdfdfd; stroke: #666; stroke-width: 0.5; transition: 0.2s; }
-        .active-pref { fill: #ff4757 !important; stroke: #c0392b; stroke-width: 1.5; animation: flash 1s infinite alternate; }
-        @keyframes flash { from { fill: #ff4757; } to { fill: #ff7f50; } }
+        /* 地図のスタイル */
+        #map-area { width: 100%; max-width: 550px; margin: 15px auto; border: 2px solid #ddd; border-radius: 10px; background: white; padding: 10px; }
+        svg { width: 100%; height: auto; stroke-linejoin: round; }
+        .pref-path { fill: #fff; stroke: #666; stroke-width: 0.5; }
+        .active-pref { fill: #ff6b6b !important; stroke: #c0392b; stroke-width: 1.5; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* 問題文・テキスト */
-        .question-box { font-size: 24px; font-weight: bold; margin: 20px 0; min-height: 60px; line-height: 1.6; }
-        ruby rt { font-size: 0.5em; color: #7f8c8d; }
+        /* テキスト表示 */
+        h1 { font-size: 20px; color: #2c3e50; }
+        .question-box { font-size: 22px; font-weight: bold; margin: 20px 0; min-height: 80px; line-height: 1.8; color: #333; }
+        ruby rt { font-size: 0.45em; color: #7f8c8d; letter-spacing: 0.1em; }
 
-        /* ボタン類 */
-        .btn { padding: 12px 25px; font-size: 18px; cursor: pointer; border-radius: 8px; border: none; transition: 0.2s; margin: 5px; font-weight: bold; }
-        .btn-menu { width: 80%; background: var(--main-blue); color: white; margin-bottom: 15px; }
+        /* ボタンデザイン */
+        .btn { padding: 12px 24px; font-size: 18px; cursor: pointer; border-radius: 12px; border: none; transition: 0.2s; margin: 5px; font-weight: bold; box-shadow: 0 3px #ccc; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 1px #ccc; }
+        .btn-blue { background: var(--main-blue); color: white; width: 85%; }
         .btn-hint { background: #9b59b6; color: white; }
-        .btn-show { background: #95a5a6; color: white; }
-        .btn-choice { background: white; border: 3px solid #ddd; width: 180px; }
-        .btn-choice:hover { background: #f0f0f0; }
-        .btn-correct { background: #2ecc71; color: white; padding: 20px 40px; font-size: 24px; }
-        .btn-wrong { background: #e67e22; color: white; padding: 20px 40px; font-size: 24px; }
-        
-        #choice-section, #self-judge-section, #result-msg { display: none; margin-top: 20px; }
-        #result-msg { font-size: 30px; font-weight: bold; }
-        .next-box { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; }
+        .btn-ans { background: #34495e; color: white; }
+        .btn-choice { background: #f8f9fa; border: 2px solid #ddd; width: 180px; box-shadow: none; }
+        .btn-ok { background: #2ecc71; color: white; padding: 15px 40px; font-size: 22px; }
+        .btn-ng { background: #e67e22; color: white; padding: 15px 40px; font-size: 22px; }
 
+        /* セクション制御 */
         #menu-screen { display: block; }
         #game-screen { display: none; }
+        #hint-section, #ans-section, #judge-section { display: none; margin-top: 15px; }
+        #result-display { font-size: 28px; font-weight: bold; margin-top: 15px; min-height: 40px; }
     </style>
 </head>
 <body>
@@ -44,50 +43,49 @@
 <div class="container">
     <div id="menu-screen">
         <h1>🗾 都道<ruby>府県<rt>ふけん</rt></ruby>クイズ 🗾</h1>
-        <p>小<ruby>学<rt>がく</rt></ruby>4年生向け学習アプリ</p>
-        <button class="btn btn-menu" onclick="initGame('location')">📍 場所クイズをはじめる</button><br>
-        <button class="btn btn-menu" onclick="initGame('capital')">🏢 県庁所在地クイズをはじめる</button>
+        <button class="btn btn-blue" onclick="start('loc')">📍 ばしょクイズ</button><br>
+        <button class="btn btn-blue" onclick="start('cap')">🏢 けんちょう<ruby>所在地<rt>しょざいち</rt></ruby>クイズ</button>
+        <p style="font-size: 14px; color: #666; margin-top: 20px;">※がっこうの<ruby>白地図<rt>はくちず</rt></ruby>をつかっているよ！</p>
     </div>
 
     <div id="game-screen">
         <div id="map-area">
-            <svg viewBox="0 0 800 550" id="japan-map">
-                <g id="map-paths">
-                    <path id="p1" class="pref-path" d="M635 10l15 15-5 30-30 20-40-5 5-25-15-30z"/><path id="p2" class="pref-path" d="M580 110l20 20-5 30-25 10-10-30z"/><path id="p3" class="pref-path" d="M585 170l10 50-25 5-5-50z"/><path id="p4" class="pref-path" d="M575 230l10 35-30 10-2-40z"/><path id="p5" class="pref-path" d="M555 170l10 50-15 5-15-45z"/><path id="p6" class="pref-path" d="M550 230l15 35-20 10-15-35z"/><path id="p7" class="pref-path" d="M545 275l30 5 5 40-40 5z"/><path id="p8" class="pref-path" d="M545 330l20 15-5 40-20-5z"/><path id="p9" class="pref-path" d="M530 330l15 5-5 35-15-5z"/><path id="p10" class="pref-path" d="M510 330l20 5-2 30-20-2z"/><path id="p11" class="pref-path" d="M510 370l30 5-2 20-30-2z"/><path id="p12" class="pref-path" d="M545 385l15 30-20 20-10-40z"/><path id="p13" class="pref-path" d="M510 395l25 5-5 15-20-2z"/><path id="p14" class="pref-path" d="M505 415l15 10-10 15-10-10z"/><path id="p15" class="pref-path" d="M520 270l15 5-5 45-25-10z"/><path id="p16" class="pref-path" d="M480 300l20 10-5 30-15-10z"/><path id="p17" class="pref-path" d="M465 295l15 10-10 40-15 5z"/><path id="p18" class="pref-path" d="M455 350l20 10-5 30-15 5z"/><path id="p19" class="pref-path" d="M495 375l15 2-2 25-15-2z"/><path id="p20" class="pref-path" d="M485 340l25 10-5 60-20-10z"/><path id="p21" class="pref-path" d="M465 375l18 10-5 35-15 10z"/><path id="p22" class="pref-path" d="M490 425l25 10-15 25-10-15z"/><path id="p23" class="pref-path" d="M470 425l20 10-10 25-10-15z"/><path id="p24" class="pref-path" d="M445 420l20 5-5 50-15-5z"/><path id="p25" class="pref-path" d="M435 390l15 10-5 30-12-10z"/><path id="p26" class="pref-path" d="M420 390l15 5-5 30-15-5z"/><path id="p27" class="pref-path" d="M415 430l15 5-2 30-15-10z"/><path id="p28" class="pref-path" d="M390 395l25 5 5 45-20 15-10-40z"/><path id="p29" class="pref-path" d="M430 435l10 5-5 35-10-5z"/><path id="p30" class="pref-path" d="M410 465l20 10-10 30-15-10z"/><path id="p31" class="pref-path" d="M360 390l25 5-5 25-25-5z"/><path id="p32" class="pref-path" d="M320 395l35 5-5 25-35-5z"/><path id="p33" class="pref-path" d="M355 425l30 5-5 30-30-5z"/><path id="p34" class="pref-path" d="M320 430l30 5-5 30-30-5z"/><path id="p35" class="pref-path" d="M295 425l22 5-5 35-22-5z"/><path id="p36" class="pref-path" d="M330 475l30 5-15 20-15 5z"/><path id="p37" class="pref-path" d="M325 465l30 5-5 10-25-2z"/><path id="p38" class="pref-path" d="M290 475l35 5-10 25-25-5z"/><path id="p39" class="pref-path" d="M305 500l35 5-10 25-30-5z"/><path id="p40" class="pref-path" d="M260 440l25 10-10 25-15-10z"/><path id="p41" class="pref-path" d="M235 450l20 5-5 20-15-5z"/><path id="p42" class="pref-path" d="M225 470l15 5-10 30-15-15z"/><path id="p43" class="pref-path" d="M235 480l20 10-5 40-15-10z"/><path id="p44" class="pref-path" d="M265 475l20 10-10 40-15-10z"/><path id="p45" class="pref-path" d="M255 520l15 10-5 45-15-10z"/><path id="p46" class="pref-path" d="M230 535l20 10-10 40-20-10z"/><path id="p47" class="pref-path" d="M100 500l30 5-5 10-30-5z"/></g>
+            <svg viewBox="0 0 800 600" id="jp-svg">
+                <g id="paths">
+                    <path id="p1" class="pref-path" d="M640 20l20 20-10 40-40 30-50-5 10-30-20-40z"/><path id="p2" class="pref-path" d="M585 120l20 25-5 40-35 10-15-40z"/><path id="p3" class="pref-path" d="M595 185l10 60-35 5-5-60z"/><path id="p4" class="pref-path" d="M585 250l12 40-35 15-2-50z"/><path id="p5" class="pref-path" d="M565 180l12 60-20 8-20-55z"/><path id="p6" class="pref-path" d="M560 250l18 45-25 10-18-45z"/><path id="p7" class="pref-path" d="M555 305l35 8 5 45-50 10z"/><path id="p8" class="pref-path" d="M555 365l25 20-5 45-25-5z"/><path id="p9" class="pref-path" d="M535 360l20 8-5 40-20-8z"/><path id="p10" class="pref-path" d="M505 360l25 8-2 40-25-2z"/><path id="p11" class="pref-path" d="M510 405l35 10-2 25-38-2z"/><path id="p12" class="pref-path" d="M555 425l18 35-25 25-12-50z"/><path id="p13" class="pref-path" d="M515 430l30 8-5 20-25-3z"/><path id="p14" class="pref-path" d="M510 455l20 12-10 20-15-12z"/><path id="p15" class="pref-path" d="M525 295l20 10-5 55-30-15z"/><path id="p16" class="pref-path" d="M480 325l25 15-8 35-20-15z"/><path id="p17" class="pref-path" d="M460 320l20 15-15 50-20 5z"/><path id="p18" class="pref-path" d="M445 385l25 15-8 35-20 8z"/><path id="p19" class="pref-path" d="M500 415l20 5-2 30-20-2z"/><path id="p20" class="pref-path" d="M485 375l35 15-8 75-25-15z"/><path id="p21" class="pref-path" d="M460 415l25 15-8 40-20 15z"/><path id="p22" class="pref-path" d="M495 475l30 15-20 30-15-20z"/><path id="p23" class="pref-path" d="M470 475l25 15-15 30-15-20z"/><path id="p24" class="pref-path" d="M445 470l25 8-8 60-20-8z"/><path id="p25" class="pref-path" d="M435 435l18 15-5 35-15-12z"/><path id="p26" class="pref-path" d="M415 435l20 8-5 40-18-5z"/><path id="p27" class="pref-path" d="M410 485l18 8-2 35-18-12z"/><path id="p28" class="pref-path" d="M380 440l35 5 5 55-25 20-12-50z"/><path id="p29" class="pref-path" d="M430 490l15 8-5 40-15-8z"/><path id="p30" class="pref-path" d="M405 525l25 15-12 40-18-15z"/><path id="p31" class="pref-path" d="M345 435l30 8-5 30-30-5z"/><path id="p32" class="pref-path" d="M300 440l45 8-5 30-45-5z"/><path id="p33" class="pref-path" d="M340 480l38 8-5 40-38-8z"/><path id="p34" class="pref-path" d="M300 485l40 8-5 40-40-8z"/><path id="p35" class="pref-path" d="M265 480l30 8-5 45-30-8z"/><path id="p36" class="pref-path" d="M315 545l35 8-18 25-18 5z"/><path id="p37" class="pref-path" d="M310 530l35 8-8 12-30-2z"/><path id="p38" class="pref-path" d="M270 545l45 8-12 35-30-8z"/><path id="p39" class="pref-path" d="M290 575l45 8-12 35-38-8z"/><path id="p40" class="pref-path" d="M225 500l35 15-15 35-20-15z"/><path id="p41" class="pref-path" d="M195 515l25 8-5 25-20-8z"/><path id="p42" class="pref-path" d="M185 540l18 8-12 40-18-20z"/><path id="p43" class="pref-path" d="M195 555l25 12-8 55-20-15z"/><path id="p44" class="pref-path" d="M235 545l25 12-12 55-18-15z"/><path id="p45" class="pref-path" d="M225 610l20 12-8 60-20-15z"/><path id="p46" class="pref-path" d="M195 630l25 12-12 55-25-15z"/><path id="p47" class="pref-path" d="M50 580l40 10-10 15-40-10z"/></g>
             </svg>
         </div>
 
         <div class="question-box" id="q-text"></div>
 
-        <div id="action-btns">
-            <button class="btn btn-hint" onclick="showHintChoices()">💡 ヒント (2<ruby>択<rt>たく</rt></ruby>)</button>
-            <button class="btn btn-show" onclick="showAnswerSelf()">👁️ こたえをみる</button>
+        <div id="first-btns">
+            <button class="btn btn-ans" onclick="showAns()">👁️ こたえをみる</button>
+            <button class="btn btn-hint" onclick="showHint()">💡 ヒント (2<ruby>択<rt>たく</rt></ruby>)</button>
         </div>
 
-        <div id="choice-section">
+        <div id="hint-section">
             <p>どっちかな？</p>
-            <button id="c1" class="btn btn-choice" onclick="checkChoice(0)"></button>
-            <button id="c2" class="btn btn-choice" onclick="checkChoice(1)"></button>
+            <button id="choice1" class="btn btn-choice" onclick="selectChoice(0)"></button>
+            <button id="choice2" class="btn btn-choice" onclick="selectChoice(1)"></button>
         </div>
 
-        <div id="self-judge-section">
+        <div id="result-display"></div>
+
+        <div id="judge-section">
             <p>せいかい できたかな？</p>
-            <button class="btn btn-correct" onclick="judgeFinal(true)">⭕ できた！</button>
-            <button class="btn btn-wrong" onclick="judgeFinal(false)">❌ ざんねん</button>
+            <button class="btn btn-ok" onclick="judgeFinal(true)">⭕ できた！</button>
+            <button class="btn btn-ng" onclick="judgeFinal(false)">❌ だめだった</button>
         </div>
 
-        <div id="result-msg"></div>
-
-        <div class="next-box">
-            <button class="btn btn-menu" style="width:auto;" onclick="nextQuestion()">つぎの<ruby>問題<rt>もんだい</rt></ruby>へ</button><br>
-            <button class="btn" style="background:none; color:blue; text-decoration:underline;" onclick="location.reload()">メニューにもどる</button>
+        <div style="margin-top: 30px;">
+            <button class="btn btn-blue" style="width: auto; padding: 10px 40px;" onclick="next()">つぎの問題へ</button><br>
+            <button onclick="location.reload()" style="background:none; border:none; color:#3498db; text-decoration:underline; cursor:pointer; margin-top:10px;">メニューにもどる</button>
         </div>
     </div>
 </div>
 
 <script>
-    // JISコード順 全47都道府県データ
-    const masterData = [
+    const data = [
         {id:1, n:"北海道", nr:"ほっかいどう", c:"札幌市", cr:"さっぽろし"}, {id:2, n:"青森県", nr:"あおもりけん", c:"青森市", cr:"あおもりし"},
         {id:3, n:"岩手県", nr:"いわてけん", c:"盛岡市", cr:"もりおかし"}, {id:4, n:"宮城県", nr:"みやぎけん", c:"仙台市", cr:"せんだいし"},
         {id:5, n:"秋田県", nr:"あきたけん", c:"秋田市", cr:"あきたし"}, {id:6, n:"山形県", nr:"やまがたけん", c:"山形市", cr:"やまがたし"},
@@ -104,111 +102,95 @@
         {id:27, n:"大阪府", nr:"おおさかふ", c:"大阪市", cr:"おおさかし"}, {id:28, n:"兵庫県", nr:"ひょうごけん", c:"神戸市", cr:"こうべし"},
         {id:29, n:"奈良県", nr:"ならけん", c:"奈良市", cr:"ならし"}, {id:30, n:"和歌山県", nr:"わかやまけん", c:"和歌山市", cr:"わかやまし"},
         {id:31, n:"鳥取県", nr:"とっとりけん", c:"鳥取市", cr:"とっとりし"}, {id:32, n:"島根県", nr:"しまねけん", c:"松江市", cr:"まつえし"},
-        {id:33, n:"岡山県", nr:"おかやまけん", c:"岡山市", cr:"おかやまし"}, {id:34, n:"広島県", nr:"ひろしまけん", c:"広島市", cr:"ひろしまし"},
+        {id:33, n:"岡山県", nr:"おかやまけん", c:"岡山市", cr:"おかやまし"}, {id:34, n:"広島県", nr:"ひろしまけん", c:"広島市", cr:"広島し"},
         {id:35, n:"山口県", nr:"やまぐちけん", c:"山口市", cr:"やまぐちし"}, {id:36, n:"徳島県", nr:"とくしまけん", c:"徳島市", cr:"とくしまし"},
         {id:37, n:"香川県", nr:"かがわけん", c:"高松市", cr:"たかまつし"}, {id:38, n:"愛媛県", nr:"えひめけん", c:"松山市", cr:"まつやまし"},
-        {id:40, n:"福岡県", nr:"ふくおかけん", c:"福岡市", cr:"ふくおかし"}, {id:41, n:"佐賀県", nr:"さがけん", c:"佐賀市", cr:"さがし"},
-        {id:42, n:"長崎県", nr:"ながさきけん", c:"長崎市", cr:"ながさきし"}, {id:43, n:"熊本県", nr:"くまもとけん", c:"熊本市", cr:"くまもとし"},
-        {id:44, n:"大分県", nr:"おおいたけん", c:"大分市", cr:"おおいたし"}, {id:45, n:"宮崎県", nr:"みやざきけん", c:"宮崎市", cr:"みやざきし"},
-        {id:46, n:"鹿児島県", nr:"かごしまけん", c:"鹿児島市", cr:"かごしまし"}, {id:47, n:"沖縄県", nr:"おきなわけん", c:"那覇市", cr:"なはし"},
-        {id:39, n:"高知県", nr:"こうちけん", c:"高知市", cr:"こうちし"}
+        {id:39, n:"高知県", nr:"こうちけん", c:"高知市", cr:"こうちし"}, {id:40, n:"福岡県", nr:"ふくおかけん", c:"福岡市", cr:"ふくおかし"},
+        {id:41, n:"佐賀県", nr:"さがけん", c:"佐賀市", cr:"さがし"}, {id:42, n:"長崎県", nr:"ながさきけん", c:"長崎市", cr:"ながさきし"},
+        {id:43, n:"熊本県", nr:"くまもとけん", c:"熊本市", cr:"くまもとし"}, {id:44, n:"大分県", nr:"おおいたけん", c:"大分市", cr:"おおいたし"},
+        {id:45, n:"宮崎県", nr:"みやざきけん", c:"宮崎市", cr:"みやざきし"}, {id:46, n:"鹿児島県", nr:"かごしまけん", c:"鹿児島市", cr:"かごしまし"},
+        {id:47, n:"沖縄県", nr:"おきなわけん", c:"那覇市", cr:"なはし"}
     ];
 
-    const praises = [
-        "すごーい！天才じゃん！", "大正解！その調子だよ！", "やったね！完ペキだ！",
-        "素晴らしい！地図博士だね！", "正解！きみの努力は本物だ！"
-    ];
+    const messages = ["すごーい！天才だね！", "やったね！大正解！", "すばらしい！その調子！", "完ペキ！地図マスターだね！", "大正解！かっこいいー！"];
+    let mode = ''; let current = {}; let correctIdx = 0; let synth = window.speechSynthesis;
 
-    let mode = '';
-    let currentPref = {};
-    let correctChoiceIdx = 0;
-    let synth = window.speechSynthesis;
-
-    function initGame(m) {
+    function start(m) {
         mode = m;
         document.getElementById('menu-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
-        nextQuestion();
+        next();
     }
 
-    function nextQuestion() {
-        // 表示クリア
-        document.querySelectorAll('.active-pref').forEach(p => p.classList.remove('active-pref'));
-        document.getElementById('choice-section').style.display = 'none';
-        document.getElementById('self-judge-section').style.display = 'none';
-        document.getElementById('result-msg').style.display = 'none';
-        document.getElementById('action-btns').style.display = 'block';
+    function next() {
+        document.querySelectorAll('.active-pref').forEach(el => el.classList.remove('active-pref'));
+        document.getElementById('first-btns').style.display = 'block';
+        document.getElementById('hint-section').style.display = 'none';
+        document.getElementById('judge-section').style.display = 'none';
+        document.getElementById('result-display').innerText = '';
 
-        // ランダム出題
-        currentPref = masterData[Math.floor(Math.random() * masterData.length)];
-        
-        if (mode === 'location') {
-            document.getElementById('japan-map').parentElement.style.display = 'block';
-            document.getElementById('p' + currentPref.id).classList.add('active-pref');
-            document.getElementById('q-text').innerHTML = `赤いところの<ruby>都道<rt>とどう</rt>府<rt>ふ</rt>県<rt>けん</rt>名<rt>めい</rt></ruby>は？`;
+        current = data[Math.floor(Math.random() * data.length)];
+        const qBox = document.getElementById('q-text');
+
+        if (mode === 'loc') {
+            document.getElementById('map-area').style.display = 'block';
+            document.getElementById('p' + current.id).classList.add('active-pref');
+            qBox.innerHTML = `<ruby>赤<rt>あか</rt></ruby>いところの<br><ruby>都道<rt>とどう</rt>府<rt>ふ</rt>県<rt>けん</rt>名<rt>めい</rt></ruby>は？`;
         } else {
-            document.getElementById('japan-map').parentElement.style.display = 'none';
-            document.getElementById('q-text').innerHTML = `<ruby>${currentPref.n}<rt>${currentPref.nr}</rt></ruby>の<br><ruby>県庁<rt>けんちょう</rt>所在地<rt>しょざいち</rt></ruby>は？`;
+            document.getElementById('map-area').style.display = 'none';
+            qBox.innerHTML = `<ruby>${current.n}<rt>${current.nr}</rt></ruby>の<br><ruby>県庁<rt>けんちょう</rt>所在地<rt>しょざいち</rt></ruby>は？`;
         }
     }
 
-    // ヒントを表示（2択）
-    function showHintChoices() {
-        document.getElementById('action-btns').style.display = 'none';
-        document.getElementById('choice-section').style.display = 'block';
-        
-        let wrongPref = masterData.filter(p => p.id !== currentPref.id)[Math.floor(Math.random() * (masterData.length - 1))];
-        correctChoiceIdx = Math.floor(Math.random() * 2);
-        
+    function showHint() {
+        document.getElementById('first-btns').style.display = 'none';
+        document.getElementById('hint-section').style.display = 'block';
+        let wrong = data.filter(p => p.id !== current.id)[Math.floor(Math.random() * 46)];
+        correctIdx = Math.floor(Math.random() * 2);
         const choices = [];
-        if (mode === 'location') {
-            choices[correctChoiceIdx] = `<ruby>${currentPref.n}<rt>${currentPref.nr}</rt></ruby>`;
-            choices[1 - correctChoiceIdx] = `<ruby>${wrongPref.n}<rt>${wrongPref.nr}</rt></ruby>`;
+        if (mode === 'loc') {
+            choices[correctIdx] = `<ruby>${current.n}<rt>${current.nr}</rt></ruby>`;
+            choices[1-correctIdx] = `<ruby>${wrong.n}<rt>${wrong.nr}</rt></ruby>`;
         } else {
-            choices[correctChoiceIdx] = `<ruby>${currentPref.c}<rt>${currentPref.cr}</rt></ruby>`;
-            choices[1 - correctChoiceIdx] = `<ruby>${wrongPref.c}<rt>${wrongPref.cr}</rt></ruby>`;
+            choices[correctIdx] = `<ruby>${current.c}<rt>${current.cr}</rt></ruby>`;
+            choices[1-correctIdx] = `<ruby>${wrong.c}<rt>${wrong.cr}</rt></ruby>`;
         }
-
-        document.getElementById('c1').innerHTML = choices[0];
-        document.getElementById('c2').innerHTML = choices[1];
+        document.getElementById('choice1').innerHTML = choices[0];
+        document.getElementById('choice2').innerHTML = choices[1];
     }
 
-    function checkChoice(idx) {
-        if (idx === correctChoiceIdx) judgeFinal(true);
+    function selectChoice(idx) {
+        if (idx === correctIdx) judgeFinal(true);
         else judgeFinal(false);
     }
 
-    // 自力回答
-    function showAnswerSelf() {
-        document.getElementById('action-btns').style.display = 'none';
-        const ansText = mode === 'location' ? `${currentPref.n} (${currentPref.nr})` : `${currentPref.c} (${currentPref.cr})`;
-        document.getElementById('result-msg').style.display = 'block';
-        document.getElementById('result-msg').innerHTML = `<span style="font-size:16px; color:#666;">こたえ：</span><br>${ansText}`;
-        document.getElementById('self-judge-section').style.display = 'block';
+    function showAns() {
+        document.getElementById('first-btns').style.display = 'none';
+        const ans = mode === 'loc' ? current.n : current.c;
+        document.getElementById('result-display').innerHTML = `<span style="font-size:16px; color:#666;">こたえ：</span><br>${ans}`;
+        document.getElementById('judge-section').style.display = 'block';
     }
 
-    function judgeFinal(isCorrect) {
-        document.getElementById('choice-section').style.display = 'none';
-        document.getElementById('self-judge-section').style.display = 'none';
-        document.getElementById('result-msg').style.display = 'block';
-        
-        if (isCorrect) {
-            document.getElementById('result-msg').innerHTML = `<span style="color:red">⭕ 正解！</span><br><span style="font-size:18px">${mode==='location'?currentPref.n:currentPref.c}</span>`;
-            speak(praises[Math.floor(Math.random() * praises.length)]);
+    function judgeFinal(isOk) {
+        document.getElementById('hint-section').style.display = 'none';
+        document.getElementById('judge-section').style.display = 'none';
+        const res = document.getElementById('result-display');
+        const ans = mode === 'loc' ? current.n : current.c;
+        if (isOk) {
+            res.innerHTML = `<span style="color:red">⭕ せいかい！</span><br>${ans}`;
+            speak(messages[Math.floor(Math.random() * messages.length)]);
         } else {
-            document.getElementById('result-msg').innerHTML = `<span style="color:blue">❌ 残念！</span><br><span style="font-size:18px">正解は ${mode==='location'?currentPref.n:currentPref.c} だよ</span>`;
+            res.innerHTML = `<span style="color:blue">❌ ざんねん！</span><br>せいかいは ${ans}`;
             speak("次はがんばろう！");
         }
     }
 
-    function speak(text) {
+    function speak(txt) {
         if (synth.speaking) synth.cancel();
-        let u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ja-JP';
-        u.pitch = 1.3;
+        let u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'ja-JP'; u.pitch = 1.3;
         synth.speak(u);
     }
 </script>
-
 </body>
 </html>
