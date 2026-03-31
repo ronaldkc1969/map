@@ -5,27 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>たのしい！都道府県クイズ</title>
     <style>
-        body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; text-align: center; background-color: #f0f8ff; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        h1 { color: #ff6b6b; font-size: 24px; }
-        .menu-btn { display: block; width: 80%; margin: 10px auto; padding: 15px; font-size: 18px; cursor: pointer; border: none; border-radius: 50px; transition: 0.3s; }
+        body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; text-align: center; background-color: #e6f7ff; color: #333; margin: 0; padding: 10px; }
+        .container { max-width: 650px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        h1 { color: #ff6b6b; font-size: 22px; margin-bottom: 5px; }
+        p.desc { font-size: 14px; color: #666; margin-top: 0; }
+        
+        /* メニュー画面 */
+        .menu-btn { display: block; width: 80%; margin: 15px auto; padding: 18px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; transition: 0.3s; box-shadow: 0 4px #ddd; }
         .btn-loc { background-color: #4ecdc4; color: white; }
         .btn-cap { background-color: #ff9f43; color: white; }
-        .btn-loc:hover, .btn-cap:hover { opacity: 0.8; transform: scale(1.05); }
-        
+        .menu-btn:hover { transform: translateY(-2px); box-shadow: 0 6px #ccc; }
+        .menu-btn:active { transform: translateY(2px); box-shadow: 0 2px #ccc; }
+
+        /* ゲーム画面 */
         #game-area { display: none; }
-        .map-container { width: 100%; height: 300px; background: #e0f7fa; border-radius: 10px; margin: 20px 0; position: relative; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .question-text { font-size: 22px; font-weight: bold; margin: 20px 0; color: #2d3436; }
+        #mode-title { font-weight: bold; color: #0984e3; font-size: 18px; margin-bottom: 10px; }
         
-        .ans-btn { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; border-radius: 5px; border: 2px solid #ddd; background: white; }
-        .hint-btn { background-color: #a29bfe; color: white; border: none; }
-        .check-btn { font-size: 20px; padding: 15px 30px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; color: white; }
-        .correct { background-color: #2ecc71; }
-        .wrong { background-color: #ff7675; }
+        /* SVG 地図エリア */
+        #map-container { width: 100%; max-width: 500px; height: auto; margin: 0 auto; background: #v; border-radius: 10px; border: 1px solid #ddd; position: relative; display: none; }
+        svg { width: 100%; height: auto; }
+        /* 白地図の基本スタイル */
+        .jp-pref { fill: #ffffff; stroke: #aaaaaa; stroke-width: 0.5; transition: fill 0.3s; }
+        /* 出題中の都道府県のスタイル */
+        .active-pref { fill: #ff7675 !important; stroke: #d63031; stroke-width: 1; animation: blink 1s infinite alternate; }
+        @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        /* 問題文・選択肢 */
+        .question-text { font-size: 20px; font-weight: bold; margin: 15px 0; color: #2d3436; min-height: 1.2em;}
+        #choice-area { margin: 20px 0; display: flex; justify-content: center; gap: 15px; }
+        .choice-btn { flex: 1; max-width: 200px; padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; background: white; border: 3px solid #ddd; border-radius: 10px; transition: 0.2s; }
+        .choice-btn:hover { background-color: #f0f0f0; border-color: #bbb; }
+        .choice-btn:disabled { cursor: default; opacity: 0.7; }
+
+        /* 結果表示 */
+        #result-display { font-size: 32px; font-weight: bold; margin-top: 10px; min-height: 40px; }
+        .correct-text { color: #2ecc71; }
+        .wrong-text { color: #e74c3c; }
         
-        #result-display { font-size: 28px; font-weight: bold; color: #d63031; margin-top: 10px; min-height: 40px; }
-        #hint-area { margin: 10px; color: #636e72; font-style: italic; }
-        .back-btn { margin-top: 20px; background: none; border: none; color: #0984e3; cursor: pointer; text-decoration: underline; }
+        #next-btn-area { display: none; margin-top: 15px; }
+        .next-btn { padding: 10px 30px; font-size: 18px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        
+        .back-btn { margin-top: 25px; background: none; border: none; color: #0984e3; cursor: pointer; text-decoration: underline; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -33,29 +53,32 @@
 <div class="container">
     <div id="menu">
         <h1>🗾 都道府県クイズ 🗾</h1>
-        <p>どれであそぶ？</p>
-        <button class="menu-btn btn-loc" onclick="startGame('location')">📍 ばしょクイズ</button>
-        <button class="menu-btn btn-cap" onclick="startGame('capital')">🏢 けんちょう所在地クイズ</button>
+        <p class="desc">小4向け・はじめての地図学習</p>
+        <button class="menu-btn btn-loc" onclick="startGame('location')">📍 ばしょクイズ<br><span style="font-size:12px; font-weight:normal;">(地図の赤いところはどこ？)</span></button>
+        <button class="menu-btn btn-cap" onclick="startGame('capital')">🏢 けんちょう所在地クイズ<br><span style="font-size:12px; font-weight:normal;">(県の中心の町はどこ？)</span></button>
     </div>
 
     <div id="game-area">
-        <div id="mode-title" style="font-weight: bold; color: #74b9ff;"></div>
+        <div id="mode-title"></div>
         
-        <div id="map-display" class="map-container">
-            <div id="map-target" style="font-size: 50px;">❓</div>
+        <div id="map-container">
+            <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                <g id="jp-map">
+                    <path id="pref-1" class="jp-pref" d="M668 15l22 17-10 44-38 31-50-6 10-27-21-39z"/> <path id="pref-2" class="jp-pref" d="M602 122l20 25-5 40-30 8-10-38z"/> <path id="pref-3" class="jp-pref" d="M608 178l10 57-30 4-5-53z"/> <path id="pref-4" class="jp-pref" d="M598 245l11 39-33 13-1-45z"/> <path id="pref-5" class="jp-pref" d="M578 175l10 57-18 6-17-48z"/> <path id="pref-6" class="jp-pref" d="M574 242l15 42-20 10-15-40z"/> <path id="pref-7" class="jp-pref" d="M569 295l34 6 5 44-46 6z"/> <path id="pref-8" class="jp-pref" d="M572 355l21 16-5 42-18-2z"/> <path id="pref-9" class="jp-pref" d="M555 352l16 2-3 40-20-4z"/> <path id="pref-10" class="jp-pref" d="M530 350l23 5-1 33-21 1z"/> <path id="pref-11" class="jp-pref" d="M532 390l33 8 1 18-35-1z"/> <path id="pref-12" class="jp-pref" d="M570 415l15 30-22 25-8-44z"/> <path id="pref-13" class="jp-pref" d="M535 413l30 5-5 13-25-3z"/> <path id="pref-14" class="jp-pref" d="M534 430l18 10-10 18-10-10z"/> <path id="pref-15" class="jp-pref" d="M540 294l17 6-1 42-26-8 2-35z"/> <path id="pref-16" class="jp-pref" d="M495 320l20 10-5 30-15-10z"/> <path id="pref-17" class="jp-pref" d="M478 315l17 10-10 40-15 5 2-45z"/> <path id="pref-18" class="jp-pref" d="M465 372l20 10-5 30-15 5z"/> <path id="pref-19" class="jp-pref" d="M515 390l15 2-1 30-15-3z"/> <path id="pref-20" class="jp-pref" d="M500 355l28 10-5 60-20-10z"/> <path id="pref-21" class="jp-pref" d="M480 380l18 10-5 35-13 10z"/> <path id="pref-22" class="jp-pref" d="M512 435l23 10-15 25-10-15z"/> <path id="pref-23" class="jp-pref" d="M490 432l18 10-10 25-10-15z"/> <path id="pref-24" class="jp-pref" d="M465 425l20 5-5 50-15-5z"/> <path id="pref-25" class="jp-pref" d="M455 395l13 10-3 30-12-10z"/> <path id="pref-26" class="jp-pref" d="M438 398l15 5-2 30-15-2z"/> <path id="pref-27" class="jp-pref" d="M435 435l13 1-1 30-12-10z"/> <path id="pref-28" class="jp-pref" d="M410 400l25-1 5 45-25 15-10-30z"/> <path id="pref-29" class="jp-pref" d="M445 440l10 5-2 35-10 5z"/> <path id="pref-30" class="jp-pref" d="M425 470l20 10-10 30-15-10z"/> <path id="pref-31" class="jp-pref" d="M380 395l25 1-2 25-25 5z"/> <path id="pref-32" class="jp-pref" d="M340 400l35-1-2 25-35 5z"/> <path id="pref-33" class="jp-pref" d="M375 428l30-2-3 30-28 2z"/> <path id="pref-34" class="jp-pref" d="M340 432l32-2-3 33-30 2z"/> <path id="pref-35" class="jp-pref" d="M315 428l22-2-2 35-22-1z"/> <path id="pref-36" class="jp-pref" d="M350 480l30 3-15 20-15 5z"/> <path id="pref-37" class="jp-pref" d="M345 470l32-2-5 12-25 3z"/> <path id="pref-38" class="jp-pref" d="M310 475l30 5-10 25-20 5z"/> <path id="pref-39" class="jp-pref" d="M325 498l35 2-10 25-30-5z"/> <path id="pref-40" class="jp-pref" d="M280 440l25 10-10 25-15-10z"/> <path id="pref-41" class="jp-pref" d="M255 450l20 5-5 20-15-5z"/> <path id="pref-42" class="jp-pref" d="M245 470l15 5-10 30-15-15z"/> <path id="pref-43" class="jp-pref" d="M258 480l18 10-5 40-15-10z"/> <path id="pref-44" class="jp-pref" d="M285 475l18 10-10 40-12-10z"/> <path id="pref-45" class="jp-pref" d="M275 515l18 10-5 45-15-10z"/> <path id="pref-46" class="jp-pref" d="M250 530l20 10-10 40-20-10z"/> <path id="pref-47" class="jp-pref" d="M100 500l30 10-10 10-25-10z"/> </g>
+            </svg>
         </div>
 
         <div class="question-text" id="question"></div>
         
-        <div id="hint-area"></div>
-        <button id="btn-show-hint" class="ans-btn hint-btn" onclick="showHint()">ヒントをみる</button>
-        <button id="btn-show-ans" class="ans-btn" onclick="showAnswer()">こたえをみる</button>
+        <div id="choice-area">
+            <button id="choice0" class="choice-btn" onclick="selectAnswer(0)"></button>
+            <button id="choice1" class="choice-btn" onclick="selectAnswer(1)"></button>
+        </div>
 
-        <div id="answer-section" style="display:none;">
-            <div id="result-display"></div>
-            <p>せいかい できたかな？</p>
-            <button class="check-btn correct" onclick="judge(true)">⭕ できた！</button>
-            <button class="check-btn wrong" onclick="judge(false)">❌ だめだった</button>
+        <div id="result-display"></div>
+        
+        <div id="next-btn-area">
+            <button class="next-btn" onclick="nextQuestion()">つぎの問題へ 👉</button>
         </div>
 
         <br>
@@ -64,94 +87,162 @@
 </div>
 
 <script>
+    // データ（小4向けに厳選したリスト。全47都道府県に拡張可能）
     const prefs = [
-        {name: "北海道", cap: "札幌市", region: "北海道"},
-        {name: "青森県", cap: "青森市", region: "東北"},
-        {name: "岩手県", cap: "盛岡市", region: "東北"},
-        {name: "宮城県", cap: "仙台市", region: "東北"},
-        {name: "秋田県", cap: "秋田市", region: "東北"},
-        {name: "東京都", cap: "新宿区", region: "関東"},
-        {name: "神奈川県", cap: "横浜市", region: "関東"},
-        {name: "大阪府", cap: "大阪市", region: "近畿"},
-        {name: "京都府", cap: "京都市", region: "近畿"},
-        {name: "福岡県", cap: "福岡市", region: "九州"},
-        {name: "沖縄県", cap: "那覇市", region: "九州"}
-        // データの簡略化のため一部抜粋。全47都道府県追加可能です。
+        {id: 1, name: "北海道", cap: "札幌市"}, {id: 2, name: "青森県", cap: "青森市"},
+        {id: 3, name: "岩手県", cap: "盛岡市"}, {id: 4, name: "宮城県", cap: "仙台市"},
+        {id: 5, name: "秋田県", cap: "秋田市"}, {id: 13, name: "東京都", cap: "新宿区"},
+        {id: 14, name: "神奈川県", cap: "横浜市"}, {id: 15, name: "新潟県", cap: "新潟市"},
+        {id: 23, name: "愛知県", cap: "名古屋市"}, {id: 26, name: "京都府", cap: "京都市"},
+        {id: 27, name: "大阪府", cap: "大阪市"}, {id: 28, name: "兵庫県", cap: "神戸市"},
+        {id: 34, name: "広島県", cap: "広島市"}, {id: 40, name: "福岡県", cap: "福岡市"},
+        {id: 47, name: "沖縄県", cap: "那覇市"}
+    ];
+
+    // 褒め言葉パターン（Web Speech API用）
+    const praisePhrases = [
+        "すごーい！！大正解！天才だね！",
+        "やったね！完ペキじゃん！素晴らしいよ！",
+        "ピンポーン！その調子！かっこいいぞー！",
+        "すごいすごい！地図博士になれるね！",
+        "大正解！きみの頭脳は宇宙一だね！"
     ];
 
     let currentMode = '';
     let currentPref = {};
+    let correctIdx = 0;
     let synth = window.speechSynthesis;
 
+    // ゲーム開始
     function startGame(mode) {
         currentMode = mode;
         document.getElementById('menu').style.display = 'none';
         document.getElementById('game-area').style.display = 'block';
+        
+        if (mode === 'location') {
+            document.getElementById('mode-title').innerText = '📍 ここはどこかな？ (地図クイズ)';
+            document.getElementById('map-container').style.display = 'block';
+        } else {
+            document.getElementById('mode-title').innerText = '🏢 県庁所在地 (けんちょうしょざいち) クイズ';
+            document.getElementById('map-container').style.display = 'none';
+        }
         nextQuestion();
     }
 
+    // 次の問題を出す
     function nextQuestion() {
-        currentPref = prefs[Math.floor(Math.random() * prefs.length)];
-        document.getElementById('answer-section').style.display = 'none';
-        document.getElementById('hint-area').innerText = '';
+        // 表示のリセット
         document.getElementById('result-display').innerText = '';
-        document.getElementById('btn-show-hint').style.visibility = 'visible';
+        document.getElementById('result-display').className = '';
+        document.getElementById('next-btn-area').style.display = 'none';
         
-        if (currentMode === 'location') {
-            document.getElementById('mode-title').innerText = '📍 この場所はどこかな？';
-            document.getElementById('map-display').style.display = 'flex';
-            document.getElementById('question').innerText = "赤い印の都道府県名は？";
-            document.getElementById('map-target').innerText = "📍"; 
-            // 本来はここでSVGの特定IDを赤く塗る処理を入れる
-        } else {
-            document.getElementById('mode-title').innerText = '🏢 県庁所在地（けんちょうしょざいち）を当てよう！';
-            document.getElementById('map-display').style.display = 'none';
-            document.getElementById('question').innerText = currentPref.name + " の県庁所在地は？";
+        // ボタンを有効化
+        for(let i=0; i<2; i++){
+            const btn = document.getElementById('choice'+i);
+            btn.disabled = false;
+            btn.style.backgroundColor = "white";
+            btn.style.borderColor = "#ddd";
         }
-    }
 
-    function showHint() {
+        // 地図のハイライトをリセット
+        const activePrefs = document.querySelectorAll('.active-pref');
+        activePrefs.forEach(p => p.classList.remove('active-pref'));
+
+        // ランダムに出題
+        currentPref = prefs[Math.floor(Math.random() * prefs.length)];
+        
+        // 不正解の選択肢を作成
         let wrongPref = prefs.filter(p => p.name !== currentPref.name)[Math.floor(Math.random() * (prefs.length-1))];
-        let choice1, choice2;
-        
+
+        // 2択の作成
+        let choices = [];
+        correctIdx = Math.floor(Math.random() * 2); // 正解をどちらに置くかランダム
+
         if (currentMode === 'location') {
-            choice1 = currentPref.name;
-            choice2 = wrongPref.name;
+            // 場所クイズ：地図を光らせ、選択肢は名前
+            document.getElementById('question').innerText = "赤いところの 都道府県名は？";
+            highlightPref(currentPref.id);
+            if(correctIdx === 0) { choices = [currentPref.name, wrongPref.name]; }
+            else { choices = [wrongPref.name, currentPref.name]; }
         } else {
-            choice1 = currentPref.cap;
-            choice2 = wrongPref.cap;
+            // 県庁所在地クイズ
+            document.getElementById('question').innerText = `「${currentPref.name}」の 県庁所在地は？`;
+            if(correctIdx === 0) { choices = [currentPref.cap, wrongPref.cap]; }
+            else { choices = [wrongPref.cap, currentPref.cap]; }
         }
-        
-        // ランダムに入れ替え
-        const choices = [choice1, choice2].sort(() => Math.random() - 0.5);
-        document.getElementById('hint-area').innerText = `ヒント： 「${choices[0]}」 か 「${choices[1]}」 だよ！`;
+
+        // 選択肢ボタンに反映
+        for(let i=0; i<2; i++){
+            document.getElementById('choice'+i).innerText = choices[i];
+        }
     }
 
-    function showAnswer() {
-        const ans = (currentMode === 'location') ? currentPref.name : currentPref.cap;
-        document.getElementById('result-display').innerText = "正解は... " + ans;
-        document.getElementById('answer-section').style.display = 'block';
-        document.getElementById('btn-show-hint').style.visibility = 'hidden';
+    // 地図の該当箇所を赤くする
+    function highlightPref(prefId) {
+        const path = document.getElementById('pref-' + prefId);
+        if (path) {
+            path.classList.add('active-pref');
+        }
     }
 
-    function judge(isCorrect) {
-        if (isCorrect) {
-            speak("すごーい！！大正解！天才だね！その調子でどんどん覚えちゃおう！");
-            alert("✨ 素晴らしい！ ✨");
+    // 回答を選択した時
+    function selectAnswer(selectedIdx) {
+        // ボタンを無効化
+        document.getElementById('choice0').disabled = true;
+        document.getElementById('choice1').disabled = true;
+
+        const resultDisplay = document.getElementById('result-display');
+        const selectedBtn = document.getElementById('choice' + selectedIdx);
+
+        if (selectedIdx === correctIdx) {
+            // 正解
+            resultDisplay.innerText = "⭕ せいかい！";
+            resultDisplay.className = "correct-text";
+            selectedBtn.style.backgroundColor = "#2ecc71"; // 緑
+            selectedBtn.style.borderColor = "#27ae60";
+            
+            // ランダムに褒める音声を再生
+            const praise = praisePhrases[Math.floor(Math.random() * praisePhrases.length)];
+            speak(praise);
+
         } else {
-            speak("惜しい！次はきっと大丈夫。もう一回やってみよう！");
+            // 不正解
+            resultDisplay.innerText = "❌ ざんねん！";
+            resultDisplay.className = "wrong-text";
+            selectedBtn.style.backgroundColor = "#ff7675"; // 赤
+            selectedBtn.style.borderColor = "#d63031";
+            
+            const corrAns = (currentMode === 'location') ? currentPref.name : currentPref.cap;
+            speak("惜しい！次はがんばろう。正解は、" + corrAns + "だよ。");
         }
-        nextQuestion();
+
+        // 「次へ」ボタンを表示
+        document.getElementById('next-btn-area').style.display = 'block';
     }
 
+    // 音声読み上げ
     function speak(text) {
         if (synth.speaking) { synth.cancel(); }
+        if (speechSynthesis.getVoices().length === 0) {
+            // ボイスがロードされていない場合は少し待ってから再生（Chrome対策）
+            setTimeout(() => speak(text), 100);
+            return;
+        }
         let utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'ja-JP';
-        utter.pitch = 1.2; // 少し高めの声で明るく
-        utter.rate = 1.0;
+        
+        // Googleの日本語女性声があれば優先、なければデフォルト
+        const voices = speechSynthesis.getVoices();
+        const jpnVoice = voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google'));
+        if(jpnVoice) utter.voice = jpnVoice;
+
+        utter.pitch = 1.3; // 高めの声
+        utter.rate = 1.1;  // 少し速めに元気に
         synth.speak(utter);
     }
+
+    // Chrome等のブラウザ対策：ページロード時に一度ボイスリストを取得
+    speechSynthesis.getVoices();
 </script>
 
 </body>
