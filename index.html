@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>都道府県クイズ</title>
+<title>都道府県クイズ・マスター</title>
 <style>
-  /* ===== リセット・基本 ===== */
+  /* ===== デザイン・アニメーション設定 ===== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Hiragino Maru Gothic ProN', 'BIZ UDPGothic', sans-serif;
@@ -14,9 +14,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-x: hidden;
   }
 
-  /* ===== ヘッダー ===== */
   header {
     width: 100%;
     background: linear-gradient(90deg, #1976d2, #42a5f5);
@@ -29,299 +29,83 @@
     box-shadow: 0 3px 8px rgba(0,0,0,0.2);
   }
 
-  /* ===== モード選択 ===== */
+  /* モード選択 */
   #mode-select {
-    display: flex;
-    gap: 24px;
-    margin: 40px auto 0;
-    justify-content: center;
-    flex-wrap: wrap;
+    display: flex; gap: 24px; margin: 40px auto; justify-content: center; flex-wrap: wrap;
   }
   .mode-btn {
-    padding: 24px 36px;
-    font-size: 1.4rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    transition: transform .15s, box-shadow .15s;
+    padding: 24px 36px; font-size: 1.4rem; font-weight: bold; border: none; border-radius: 20px;
+    cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.15); transition: 0.15s;
   }
-  .mode-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-  #btn-map-mode  { background: linear-gradient(135deg, #ff8f00, #ffd54f); color: #333; }
+  .mode-btn:hover { transform: translateY(-4px); }
+  #btn-map-mode { background: linear-gradient(135deg, #ff8f00, #ffd54f); color: #333; }
   #btn-capital-mode { background: linear-gradient(135deg, #388e3c, #a5d6a7); color: #fff; }
-  .mode-icon { font-size: 2.8rem; display: block; margin-bottom: 8px; }
 
-  /* ===== クイズ画面共通 ===== */
+  /* メイン画面 */
   #quiz-screen {
-    display: none;
-    width: 100%;
-    max-width: 1100px;
-    padding: 16px;
-    flex-direction: column;
-    align-items: center;
+    display: none; width: 100%; max-width: 900px; padding: 16px; flex-direction: column; align-items: center;
   }
 
-  /* ===== スコアバー ===== */
   #score-bar {
-    display: flex;
-    gap: 24px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #333;
-    background: rgba(255,255,255,0.8);
-    padding: 10px 28px;
-    border-radius: 50px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 14px;
+    display: flex; gap: 20px; font-size: 1.1rem; font-weight: bold; background: white;
+    padding: 10px 25px; border-radius: 50px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px;
   }
-  .score-correct { color: #2e7d32; }
-  .score-wrong   { color: #c62828; }
 
-  /* ===== 問題文 ===== */
   #question-box {
-    background: #fff;
-    border-radius: 18px;
-    padding: 20px 32px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #1a237e;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    text-align: center;
-    margin-bottom: 14px;
-    min-height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 700px;
+    background: #fff; border-radius: 18px; padding: 20px; font-size: 1.5rem; font-weight: bold;
+    color: #1a237e; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; margin-bottom: 15px; width: 100%;
   }
 
-  /* ===== 地図エリア ===== */
   #map-container {
-    width: 100%;
-    max-width: 680px;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    overflow: hidden;
-    margin-bottom: 14px;
-    cursor: pointer;
+    width: 100%; max-width: 600px; background: #fff; border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin-bottom: 15px;
   }
-  #map-container svg {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  /* 都道府県デフォルト */
-  #map-container .prefecture {
-    fill: #c8e6c9;
-    stroke: #fff;
-    stroke-width: 1;
-    cursor: pointer;
-    transition: fill .15s;
-  }
-  #map-container .prefecture:hover { fill: #80cbc4; }
-  /* 正解都道府県（問題に光る） */
-  #map-container .prefecture.target  { fill: #ff7043; }
-  /* ユーザーがクリックした選択中 */
-  #map-container .prefecture.selected { fill: #1e88e5; }
-  /* 正解演出 */
-  #map-container .prefecture.correct-flash { fill: #ffd600 !important; }
+  svg { width: 100%; height: auto; stroke-linejoin: round; }
+  .prefecture { fill: #c8e6c9; stroke: #444; stroke-width: 0.5; transition: 0.2s; cursor: pointer; }
+  .prefecture:hover { fill: #80cbc4; }
+  .target { fill: #ff7043 !important; animation: blink 1s infinite alternate; }
+  @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
 
-  /* ===== 県庁クイズ用 テキスト入力 ===== */
-  #capital-area {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    width: 100%;
-    max-width: 500px;
-  }
-  #capital-input {
-    width: 100%;
-    font-size: 1.5rem;
-    padding: 14px 20px;
-    border: 3px solid #1976d2;
-    border-radius: 14px;
-    text-align: center;
-    outline: none;
-    background: #fff;
-  }
-  #capital-input:focus { border-color: #ff6f00; box-shadow: 0 0 0 3px rgba(255,111,0,0.2); }
+  /* ボタン・入力 */
+  #action-btns { display: flex; gap: 10px; margin-bottom: 15px; }
+  .action-btn { padding: 12px 25px; font-size: 1.1rem; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; }
+  #btn-ans-view { background: #34495e; color: white; }
+  #btn-hint { background: #9b59b6; color: white; }
 
-  /* ===== ボタン群 ===== */
-  #action-btns {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 14px;
-  }
-  .action-btn {
-    padding: 14px 28px;
-    font-size: 1.15rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    transition: transform .12s, box-shadow .12s;
-  }
-  .action-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.2); }
-  .action-btn:disabled { opacity: .45; cursor: default; transform: none; }
-  #btn-answer  { background: linear-gradient(135deg,#ff8f00,#ffd54f); color:#333; }
-  #btn-hint    { background: linear-gradient(135deg,#6a1b9a,#ce93d8); color:#fff; }
-  #btn-next    { background: linear-gradient(135deg,#1565c0,#64b5f6); color:#fff; display:none; }
-  #btn-back    { background: #90a4ae; color:#fff; margin-top:6px; }
-
-  /* ===== ヒントボックス ===== */
-  #hint-box {
-    display: none;
-    background: #f3e5f5;
-    border: 2px solid #ab47bc;
-    border-radius: 16px;
-    padding: 16px 28px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #4a148c;
-    text-align: center;
-    margin-bottom: 12px;
-    width: 100%;
-    max-width: 500px;
-  }
-  .hint-choices { display: flex; gap: 16px; margin-top: 12px; justify-content: center; flex-wrap: wrap; }
-  .hint-choice-btn {
-    padding: 10px 28px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    background: #fff;
-    color: #4a148c;
-    border: 2px solid #ab47bc;
-    transition: background .12s;
-  }
-  .hint-choice-btn:hover { background: #ce93d8; color: #fff; }
-
-  /* ===== 正解/不正解フィードバック ===== */
-  #feedback-box {
-    display: none;
-    font-size: 1.8rem;
-    font-weight: bold;
-    padding: 18px 36px;
-    border-radius: 20px;
-    text-align: center;
-    margin-bottom: 12px;
-    animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
-    width: 100%;
-    max-width: 600px;
-  }
-  #feedback-box.correct { background: linear-gradient(135deg,#fffde7,#fff9c4); color:#f57f17; border: 3px solid #fbc02d; }
-  #feedback-box.wrong   { background: linear-gradient(135deg,#fce4ec,#f8bbd0); color:#b71c1c; border: 3px solid #e91e63; }
-  @keyframes popIn {
-    0%   { transform: scale(.5); opacity:0; }
-    100% { transform: scale(1);  opacity:1; }
-  }
-
-  /* ===== 自己判定ボタン（正解/不正解を自分で押す） ===== */
-  #self-judge {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    width: 100%;
-  }
-  #self-judge p { font-size: 1.1rem; color: #333; font-weight: bold; }
-  #self-judge .judge-btns { display: flex; gap: 20px; }
-  .judge-btn {
-    padding: 14px 36px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    transition: transform .12s;
-  }
-  .judge-btn:hover { transform: translateY(-3px); }
-  #btn-judge-ok  { background: linear-gradient(135deg,#2e7d32,#a5d6a7); color:#fff; }
-  #btn-judge-ng  { background: linear-gradient(135deg,#b71c1c,#ef9a9a); color:#fff; }
-
-  /* ===== 褒め演出オーバーレイ ===== */
+  /* 褒め演出 */
   #praise-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: center; justify-content: center;
   }
-  #praise-overlay.show { display: flex; }
   #praise-card {
-    background: linear-gradient(135deg,#fff9c4,#fff3e0,#fce4ec);
-    border-radius: 28px;
-    padding: 40px 60px;
-    text-align: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-    animation: zoomIn .5s cubic-bezier(.175,.885,.32,1.275);
-    max-width: 480px;
+    background: white; border-radius: 25px; padding: 40px; text-align: center;
+    animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  @keyframes zoomIn {
-    0%   { transform: scale(.3) rotate(-8deg); opacity:0; }
-    100% { transform: scale(1) rotate(0deg);   opacity:1; }
-  }
-  #praise-emoji { font-size: 5rem; display: block; margin-bottom: 12px; animation: spin 1s ease-out; }
-  @keyframes spin { from{transform:rotate(-20deg) scale(.5)} to{transform:rotate(0) scale(1)} }
-  #praise-text  { font-size: 2rem; font-weight: bold; color: #e65100; margin-bottom: 8px; }
-  #praise-sub   { font-size: 1.2rem; color: #555; }
-  #praise-close {
-    margin-top: 20px;
-    padding: 12px 36px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    background: linear-gradient(135deg,#1565c0,#64b5f6);
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  }
-
-  /* ===== 花火キャンバス ===== */
-  #fireworks { position: fixed; inset:0; pointer-events:none; z-index:99; }
-
-  /* ===== レスポンシブ ===== */
-  @media(max-width:600px){
-    header { font-size:1.2rem; }
-    #question-box { font-size:1.2rem; padding:14px 18px; }
-    .mode-btn { padding:18px 24px; font-size:1.1rem; }
-    #praise-card { padding:28px 28px; }
-    #praise-text { font-size:1.5rem; }
-  }
+  @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #fireworks { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
 </style>
 </head>
 <body>
 
-<header>🗾 都道府県クイズ</header>
-anvas id="fireworks"></canvas>
+<header>🗾 都道府県マスター・クイズ</header>
+<canvas id="fireworks"></canvas>
 
-<!-- ===== モード選択 ===== -->
 <div id="mode-select">
-  <button class="mode-btn" id="btn-map-mode">
-    <span class="mode-icon">🗾</span>都道府県<br>場所クイズ
+  <button class="mode-btn" id="btn-map-mode" onclick="start('map')">
+    <span style="font-size:3rem">🗾</span><br>場所クイズ
   </button>
-  <button class="mode-btn" id="btn-capital-mode">
-    <span class="mode-icon">🏛️</span>県庁所在地<br>クイズ
+  <button class="mode-btn" id="btn-capital-mode" onclick="start('cap')">
+    <span style="font-size:3rem">🏛️</span><br>県庁所在地
   </button>
 </div>
 
-<!-- ===== クイズ画面 ===== -->
 <div id="quiz-screen">
   <div id="score-bar">
-    <span>⭐ <span id="score-correct">0</span>
+    <span style="color:#2e7d32">⭕ 正解: <span id="correct-count">0</span></span>
+    <span style="color:#c62828">❌ ミス: <span id="wrong-count">0</span></span>
+  </div>
+
+  <div id="question-box"></div>
+
+  <div id="map-container">
+    <svg viewBox="0 0
