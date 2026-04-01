@@ -3,109 +3,507 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>都道府県クイズ・マスター</title>
+<title>🗾 都道府県クイズ</title>
 <style>
-  /* ===== デザイン・アニメーション設定 ===== */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Hiragino Maru Gothic ProN', 'BIZ UDPGothic', sans-serif;
-    background: linear-gradient(135deg, #e0f7fa 0%, #e8f5e9 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow-x: hidden;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN','Meiryo','MS Gothic',sans-serif;
+  background: linear-gradient(135deg,#0a0a1a,#1a1a3a,#0d2a4a);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+}
+h1 {
+  color: #fff;
+  font-size: 1.8em;
+  margin: 12px 0 8px;
+  text-shadow: 0 0 20px rgba(100,200,255,0.9);
+  letter-spacing: 3px;
+}
 
-  header {
-    width: 100%;
-    background: linear-gradient(90deg, #1976d2, #42a5f5);
-    color: #fff;
-    text-align: center;
-    padding: 14px 20px;
-    font-size: 1.6rem;
-    font-weight: bold;
-    letter-spacing: 3px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  }
+#menu {
+  background: rgba(255,255,255,0.97);
+  border-radius: 22px;
+  padding: 32px 38px;
+  margin: 8px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  max-width: 400px;
+  width: 100%;
+}
+#menu h2 { font-size:1.35em; color:#2d3436; margin-bottom:22px; }
+.menu-btn {
+  display: block;
+  width: 100%;
+  padding: 20px;
+  margin: 12px auto;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  transition: transform 0.15s, box-shadow 0.15s;
+  line-height: 1.5;
+}
+.menu-btn:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,0,0,0.35); }
+.btn-map  { background: linear-gradient(135deg,#11998e,#38ef7d); }
+.btn-cap  { background: linear-gradient(135deg,#8e44ad,#f093fb); }
 
-  /* モード選択 */
-  #mode-select {
-    display: flex; gap: 24px; margin: 40px auto; justify-content: center; flex-wrap: wrap;
-  }
-  .mode-btn {
-    padding: 24px 36px; font-size: 1.4rem; font-weight: bold; border: none; border-radius: 20px;
-    cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.15); transition: 0.15s;
-  }
-  .mode-btn:hover { transform: translateY(-4px); }
-  #btn-map-mode { background: linear-gradient(135deg, #ff8f00, #ffd54f); color: #333; }
-  #btn-capital-mode { background: linear-gradient(135deg, #388e3c, #a5d6a7); color: #fff; }
+#quiz-area {
+  width: 100%;
+  max-width: 780px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
 
-  /* メイン画面 */
-  #quiz-screen {
-    display: none; width: 100%; max-width: 900px; padding: 16px; flex-direction: column; align-items: center;
-  }
+#map-panel {
+  background: #000;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  width: 100%;
+  position: relative;
+  display: none;
+}
+#map-container {
+  position: relative;
+  width: 100%;
+  padding-top: 78.408%;
+}
+#map-img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+#map-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.pref-overlay {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 1;
+  transition: fill 0.35s;
+  cursor: pointer;
+}
+.pref-overlay:hover {
+  fill: rgba(100,150,255,0.3);
+}
+.pref-overlay.highlighted {
+  fill: rgba(255,50,50,0.55);
+  stroke: #ff1a1a;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 8px rgba(255,80,80,0.8));
+}
 
-  #score-bar {
-    display: flex; gap: 20px; font-size: 1.1rem; font-weight: bold; background: white;
-    padding: 10px 25px; border-radius: 50px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px;
-  }
+#cap-card {
+  background: rgba(255,255,255,0.97);
+  border-radius: 18px;
+  padding: 26px 28px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  width: 100%;
+  display: none;
+}
+#cap-card .lbl { font-size:.95em; color:#7f8c8d; margin-bottom:6px; }
+#cap-pref { font-size: 3em; font-weight: bold; color: #6c5ce7; margin-bottom:6px; }
+#cap-card .sub { font-size:.9em; color:#636e72; }
 
-  #question-box {
-    background: #fff; border-radius: 18px; padding: 20px; font-size: 1.5rem; font-weight: bold;
-    color: #1a237e; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; margin-bottom: 15px; width: 100%;
-  }
+#q-panel {
+  background: rgba(255,255,255,0.97);
+  border-radius: 18px;
+  padding: 20px 26px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  width: 100%;
+}
+#q-text { font-size: 1.1em; color: #2d3436; margin-bottom: 8px; }
+#answer-box {
+  font-size: 2em; font-weight: bold; color: #e17055;
+  padding: 10px 16px; background: #fff5f5; border-radius: 12px;
+  margin: 10px 0; display: none;
+  animation: pop .3s ease;
+}
+@keyframes pop {
+  0% { transform:scale(.8); opacity:0; }
+  100% { transform:scale(1); opacity:1; }
+}
+#hint-box {
+  display: none; gap: 12px; justify-content: center;
+  margin: 10px 0; flex-wrap: wrap;
+}
+.hint-opt {
+  padding: 12px 26px; font-size: 1.1em; font-weight: bold;
+  background: linear-gradient(135deg,#fddb92,#f7971e);
+  color: #5d4037; border: none; border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(247,151,30,.35); cursor: default;
+}
 
-  #map-container {
-    width: 100%; max-width: 600px; background: #fff; border-radius: 18px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin-bottom: 15px;
-  }
-  svg { width: 100%; height: auto; stroke-linejoin: round; }
-  .prefecture { fill: #c8e6c9; stroke: #444; stroke-width: 0.5; transition: 0.2s; cursor: pointer; }
-  .prefecture:hover { fill: #80cbc4; }
-  .target { fill: #ff7043 !important; animation: blink 1s infinite alternate; }
-  @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
+#btn-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center; width: 100%;
+}
+.qbtn {
+  padding: 15px 24px; font-size: 1em; font-weight: bold;
+  border: none; border-radius: 15px; cursor: pointer;
+  box-shadow: 0 5px 16px rgba(0,0,0,.3);
+  transition: transform .15s, box-shadow .15s;
+  color: white;
+}
+.qbtn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.35); }
+#btn-hint   { background: linear-gradient(135deg,#f7971e,#ffd200); color:#5d4037; }
+#btn-answer { background: linear-gradient(135deg,#11998e,#38ef7d); color:#1a3d34; }
+#btn-ok     { background: linear-gradient(135deg,#43e97b,#38f9d7); color:#1a3d34; display:none; }
+#btn-ng     { background: linear-gradient(135deg,#f093fb,#f5576c); display:none; }
+#btn-next   { background: linear-gradient(135deg,#4facfe,#00f2fe); color:#003d5b; display:none; }
+#btn-back   { background:rgba(255,255,255,.2); border:2px solid rgba(255,255,255,.5); }
 
-  /* ボタン・入力 */
-  #action-btns { display: flex; gap: 10px; margin-bottom: 15px; }
-  .action-btn { padding: 12px 25px; font-size: 1.1rem; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; }
-  #btn-ans-view { background: #34495e; color: white; }
-  #btn-hint { background: #9b59b6; color: white; }
-
-  /* 褒め演出 */
-  #praise-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
-    align-items: center; justify-content: center;
-  }
-  #praise-card {
-    background: white; border-radius: 25px; padding: 40px; text-align: center;
-    animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  #fireworks { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+#score-bar {
+  background: rgba(255,255,255,.15); border-radius: 14px;
+  padding: 12px 26px; color: white; font-size: 1.05em;
+  font-weight: bold; text-align: center; width: 100%;
+}
+#flash {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  font-size:5em; z-index:9000;
+  transition:transform .25s, opacity .25s;
+  opacity:0; pointer-events:none;
+}
+#flash.show { transform:translate(-50%,-50%) scale(1); opacity:1; }
+#cvc {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:9999;
+}
 </style>
 </head>
 <body>
+<h1>🗾 都道府県クイズ</h1>
 
-<header>🗾 都道府県マスター・クイズ</header>
-<canvas id="fireworks"></canvas>
-
-<div id="mode-select">
-  <button class="mode-btn" id="btn-map-mode" onclick="start('map')">
-    <span style="font-size:3rem">🗾</span><br>場所クイズ
+<div id="menu">
+  <h2>どっちのクイズにするかな？🎮</h2>
+  <button class="menu-btn btn-map" onclick="startQuiz('map')">
+    🗾 場所クイズ<br><span style="font-size:.65em;font-weight:normal">地図のどこの都道府県かな？</span>
   </button>
-  <button class="mode-btn" id="btn-capital-mode" onclick="start('cap')">
-    <span style="font-size:3rem">🏛️</span><br>県庁所在地
+  <button class="menu-btn btn-cap" onclick="startQuiz('capital')">
+    🏛️ 県庁所在地クイズ<br><span style="font-size:.65em;font-weight:normal">県庁所在地はどこのまち？</span>
   </button>
 </div>
 
-<div id="quiz-screen">
-  <div id="score-bar">
-    <span style="color:#2e7d32">⭕ 正解: <span id="correct-count">0</span></span>
-    <span style="color:#c62828">❌ ミス: <span id="wrong-count">0</span></span>
+<div id="quiz-area">
+  <div id="map-panel">
+    <div id="map-container">
+      <img id="map-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Regions_and_Prefectures_of_Japan_2.svg/1200px-Regions_and_Prefectures_of_Japan_2.svg.png" alt="日本地図">
+      <svg id="map-svg"></svg>
+    </div>
   </div>
 
-  <div id="question-box"></div>
+  <div id="cap-card">
+    <div class="lbl">この都道府県の県庁所在地は？</div>
+    <div id="cap-pref"></div>
+    <div class="sub">よく考えてね！</div>
+  </div>
 
-  <div id="map-container">
-    <svg viewBox="0 0
+  <div id="q-panel">
+    <div id="q-text"></div>
+    <div id="answer-box"></div>
+    <div id="hint-box"></div>
+    <div id="btn-row">
+      <button id="btn-hint" class="qbtn" onclick="showHint()">💡 ヒント</button>
+      <button id="btn-answer" class="qbtn" onclick="showAnswer()">📝 答え</button>
+      <button id="btn-ok" class="qbtn" onclick="answerCorrect()">✅ 正解！</button>
+      <button id="btn-ng" class="qbtn" onclick="answerWrong()">❌ 不正解…</button>
+      <button id="btn-next" class="qbtn" onclick="nextQuestion()">▶️ 次の問題</button>
+      <button id="btn-back" class="qbtn" onclick="backToMenu()">🏠 メニューへ</button>
+    </div>
+  </div>
+
+  <div id="score-bar"></div>
+</div>
+
+<div id="flash"></div>
+<canvas id="cvc"></canvas>
+
+<script>
+const PREFS = {
+  "北海道": {cx: 72.5, cy: 8.5, capital: "札幌市"},
+  "青森県": {cx: 68.0, cy: 18.5, capital: "青森市"},
+  "岩手県": {cx: 70.5, cy: 21.5, capital: "盛岡市"},
+  "宮城県": {cx: 69.0, cy: 25.0, capital: "仙台市"},
+  "秋田県": {cx: 65.5, cy: 21.0, capital: "秋田市"},
+  "山形県": {cx: 66.0, cy: 25.5, capital: "山形市"},
+  "福島県": {cx: 67.0, cy: 29.0, capital: "福島市"},
+  "茨城県": {cx: 68.5, cy: 33.0, capital: "水戸市"},
+  "栃木県": {cx: 66.5, cy: 32.5, capital: "宇都宮市"},
+  "群馬県": {cx: 64.5, cy: 32.0, capital: "前橋市"},
+  "埼玉県": {cx: 64.5, cy: 34.5, capital: "さいたま市"},
+  "千葉県": {cx: 68.0, cy: 35.0, capital: "千葉市"},
+  "東京都": {cx: 65.5, cy: 35.5, capital: "東京"},
+  "神奈川県": {cx: 64.5, cy: 36.5, capital: "横浜市"},
+  "新潟県": {cx: 63.5, cy: 28.0, capital: "新潟市"},
+  "富山県": {cx: 61.5, cy: 31.5, capital: "富山市"},
+  "石川県": {cx: 60.5, cy: 32.5, capital: "金沢市"},
+  "福井県": {cx: 60.0, cy: 34.5, capital: "福井市"},
+  "山梨県": {cx: 64.0, cy: 35.5, capital: "甲府市"},
+  "長野県": {cx: 62.5, cy: 33.5, capital: "長野市"},
+  "岐阜県": {cx: 60.5, cy: 36.0, capital: "岐阜市"},
+  "静岡県": {cx: 62.5, cy: 37.5, capital: "静岡市"},
+  "愛知県": {cx: 60.0, cy: 38.5, capital: "名古屋市"},
+  "三重県": {cx: 59.5, cy: 40.5, capital: "津市"},
+  "滋賀県": {cx: 58.5, cy: 38.5, capital: "大津市"},
+  "京都府": {cx: 58.5, cy: 37.5, capital: "京都市"},
+  "大阪府": {cx: 57.5, cy: 40.0, capital: "大阪市"},
+  "兵庫県": {cx: 56.5, cy: 38.5, capital: "神戸市"},
+  "奈良県": {cx: 58.0, cy: 41.0, capital: "奈良市"},
+  "和歌山県": {cx: 57.5, cy: 43.5, capital: "和歌山市"},
+  "鳥取県": {cx: 55.5, cy: 36.5, capital: "鳥取市"},
+  "島根県": {cx: 53.5, cy: 36.5, capital: "松江市"},
+  "岡山県": {cx: 56.0, cy: 40.0, capital: "岡山市"},
+  "広島県": {cx: 54.5, cy: 41.0, capital: "広島市"},
+  "山口県": {cx: 52.5, cy: 43.0, capital: "山口市"},
+  "徳島県": {cx: 57.5, cy: 45.5, capital: "徳島市"},
+  "香川県": {cx: 56.5, cy: 43.5, capital: "高松市"},
+  "愛媛県": {cx: 54.0, cy: 45.5, capital: "松山市"},
+  "高知県": {cx: 55.5, cy: 48.0, capital: "高知市"},
+  "福岡県": {cx: 48.0, cy: 45.5, capital: "福岡市"},
+  "佐賀県": {cx: 46.5, cy: 46.5, capital: "佐賀市"},
+  "長崎県": {cx: 44.5, cy: 47.5, capital: "長崎市"},
+  "熊本県": {cx: 47.5, cy: 49.5, capital: "熊本市"},
+  "大分県": {cx: 51.0, cy: 47.5, capital: "大分市"},
+  "宮崎県": {cx: 50.0, cy: 51.0, capital: "宮崎市"},
+  "鹿児島県": {cx: 47.5, cy: 54.0, capital: "鹿児島市"},
+  "沖縄県": {cx: 44.0, cy: 70.0, capital: "那覇市"}
+};
+
+let quizMode = '';
+let currentQ = null;
+let score = 0;
+let total = 0;
+let hintShown = false;
+let answerShown = false;
+let usedPrefs = [];
+
+function startQuiz(mode) {
+  quizMode = mode;
+  score = 0;
+  total = 0;
+  usedPrefs = [];
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('quiz-area').style.display = 'flex';
+  
+  if (mode === 'map') {
+    document.getElementById('map-panel').style.display = 'block';
+    document.getElementById('cap-card').style.display = 'none';
+    initMapOverlays();
+  } else {
+    document.getElementById('map-panel').style.display = 'none';
+    document.getElementById('cap-card').style.display = 'block';
+  }
+  
+  nextQuestion();
+}
+
+function initMapOverlays() {
+  const svg = document.getElementById('map-svg');
+  svg.innerHTML = '';
+  
+  for (let pref in PREFS) {
+    const data = PREFS[pref];
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', data.cx + '%');
+    circle.setAttribute('cy', data.cy + '%');
+    circle.setAttribute('r', '2.5%');
+    circle.setAttribute('class', 'pref-overlay');
+    circle.setAttribute('data-pref', pref);
+    circle.onclick = () => checkMapAnswer(pref);
+    svg.appendChild(circle);
+  }
+}
+
+function nextQuestion() {
+  hintShown = false;
+  answerShown = false;
+  
+  document.getElementById('answer-box').style.display = 'none';
+  document.getElementById('hint-box').style.display = 'none';
+  document.getElementById('btn-hint').style.display = 'inline-block';
+  document.getElementById('btn-answer').style.display = 'inline-block';
+  document.getElementById('btn-ok').style.display = 'none';
+  document.getElementById('btn-ng').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+  
+  const allPrefs = Object.keys(PREFS);
+  const available = allPrefs.filter(p => !usedPrefs.includes(p));
+  
+  if (available.length === 0) {
+    showResult();
+    return;
+  }
+  
+  currentQ = available[Math.floor(Math.random() * available.length)];
+  
+  if (quizMode === 'map') {
+    document.querySelectorAll('.pref-overlay').forEach(el => {
+      el.classList.remove('highlighted');
+    });
+    document.getElementById('q-text').textContent = `問題 ${total + 1}: 「${currentQ}」はどこ？`;
+  } else {
+    document.getElementById('cap-pref').textContent = currentQ;
+    document.getElementById('q-text').textContent = `問題 ${total + 1}: 県庁所在地を答えよう！`;
+  }
+  
+  updateScore();
+}
+
+function checkMapAnswer(selectedPref) {
+  if (answerShown || document.getElementById('btn-next').style.display !== 'none') return;
+  
+  const overlay = document.querySelector(`[data-pref="${currentQ}"]`);
+  overlay.classList.add('highlighted');
+  
+  if (selectedPref === currentQ) {
+    answerCorrect();
+  } else {
+    answerWrong();
+  }
+}
+
+function showHint() {
+  if (hintShown) return;
+  hintShown = true;
+  
+  const hintBox = document.getElementById('hint-box');
+  hintBox.innerHTML = '';
+  
+  const correctAns = PREFS[currentQ].capital;
+  const allCaps = Object.values(PREFS).map(p => p.capital);
+  const wrongOpts = allCaps.filter(c => c !== correctAns);
+  const shuffled = wrongOpts.sort(() => Math.random() - 0.5).slice(0, 2);
+  const opts = [correctAns, ...shuffled].sort(() => Math.random() - 0.5);
+  
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'hint-opt';
+    btn.textContent = opt;
+    hintBox.appendChild(btn);
+  });
+  
+  hintBox.style.display = 'flex';
+}
+
+function showAnswer() {
+  if (answerShown) return;
+  answerShown = true;
+  
+  const ansBox = document.getElementById('answer-box');
+  
+  if (quizMode === 'map') {
+    const overlay = document.querySelector(`[data-pref="${currentQ}"]`);
+    overlay.classList.add('highlighted');
+    ansBox.textContent = `ここだよ！`;
+  } else {
+    ansBox.textContent = PREFS[currentQ].capital;
+  }
+  
+  ansBox.style.display = 'block';
+  document.getElementById('btn-ok').style.display = 'inline-block';
+  document.getElementById('btn-ng').style.display = 'inline-block';
+  document.getElementById('btn-hint').style.display = 'none';
+  document.getElementById('btn-answer').style.display = 'none';
+}
+
+function answerCorrect() {
+  score++;
+  total++;
+  usedPrefs.push(currentQ);
+  showFlash('⭕');
+  triggerConfetti();
+  
+  document.getElementById('btn-ok').style.display = 'none';
+  document.getElementById('btn-ng').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-block';
+  updateScore();
+}
+
+function answerWrong() {
+  total++;
+  usedPrefs.push(currentQ);
+  showFlash('❌');
+  
+  document.getElementById('btn-ok').style.display = 'none';
+  document.getElementById('btn-ng').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-block';
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('score-bar').textContent = 
+    `スコア: ${score} / ${total} 問 ${total > 0 ? '(' + Math.round(score/total*100) + '%)' : ''}`;
+}
+
+function showFlash(emoji) {
+  const flash = document.getElementById('flash');
+  flash.textContent = emoji;
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 800);
+}
+
+function triggerConfetti() {
+  const canvas = document.getElementById('cvc');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  const pieces = [];
+  for (let i = 0; i < 50; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: -20,
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 2,
+      color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+      size: Math.random() * 8 + 4
+    });
+  }
+  
+  let frame = 0;
+  const animate = () => {
+    if (frame++ > 100) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    
+    requestAnimationFrame(animate);
+  };
+  animate();
+}
+
+function showResult() {
+  alert(`お疲れさまでした！\n最終スコア: ${score} / ${total} 問 (${Math.round(score/total*100)}%)`);
+  backToMenu();
+}
+
+function backToMenu() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+}
+</script>
+</body>
+</html>
