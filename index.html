@@ -167,9 +167,7 @@
       box-shadow: 0 6px 18px rgba(15,23,42,.08);
     }
     .question-wrap {
-      display: none;
       padding: 1rem 1.5rem .75rem;
-      display: grid;
       gap: .35rem;
     }
     .question-title {
@@ -180,11 +178,9 @@
       color: var(--muted);
     }
     .map-wrap {
-      display: none;
       position: relative;
       min-height: 560px;
       background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
-      display: none;
     }
     .map-toolbar {
       display: none;
@@ -205,8 +201,6 @@
       display: block;
     }
     .capital-wrap {
-      display: none;
-      display: none;
       padding: var(--space-6);
       gap: var(--space-4);
     }
@@ -217,9 +211,7 @@
       line-height: 1.15;
     }
     .answers {
-      display: none;
       padding: 0 var(--space-6) var(--space-6);
-      display: grid;
       gap: var(--space-4);
     }
     .answer-box {
@@ -286,7 +278,6 @@
       z-index: 90;
     }
     .footer-note {
-      display: none;
       padding: 0 var(--space-6) var(--space-6);
       color: var(--muted);
       font-size: var(--text-sm);
@@ -321,6 +312,7 @@
       stroke-width: .5;
       pointer-events: none;
     }
+    .hidden { display: none !important; }
     @media (max-width: 920px) {
       .layout { grid-template-columns: 1fr; }
       .menu { order: 2; }
@@ -384,11 +376,11 @@
             <div class="pill" id="rate-label">正答率: 0%</div>
           </div>
 
-          <div class="question-wrap">
-            <div class="question-title" id="question-title">左のメニューからクイズを選んでください。</div>
-                      </div>
+          <div class="question-wrap hidden" id="question-wrap">
+            <div class="question-title" id="question-title">クイズを選んでスタートしてください。</div>
+          </div>
 
-          <div class="map-wrap" id="map-wrap">
+          <div class="map-wrap hidden" id="map-wrap">
             <div class="map-toolbar">
             </div>
             <div class="map-stage">
@@ -398,12 +390,12 @@
             </div>
           </div>
 
-          <div class="capital-wrap" id="capital-wrap">
+          <div class="capital-wrap hidden" id="capital-wrap">
             <div class="helper">この都道府県の県庁所在地は？</div>
             <div class="capital-pref" id="capital-pref">—</div>
           </div>
 
-          <div class="answers">
+          <div class="answers hidden" id="answers-wrap">
             <div class="answer-box" id="answer-box"></div>
             <div class="hint-box" id="hint-box"></div>
             <div class="helper" id="hint-result" style="display:none;font-weight:700;"></div>
@@ -418,7 +410,7 @@
             </div>
           </div>
 
-          <div class="footer-note">注: 地図は Geolonia の公開SVG素材を利用しています。フルサイズ版とモバイル向け版があり、都道府県ごとにグループ化されています。</div>
+          <div class="footer-note hidden" id="footer-note">注: 地図は Geolonia の公開SVG素材を利用しています。フルサイズ版とモバイル向け版があり、都道府県ごとにグループ化されています。</div>
         </article>
       </section>
     </section>
@@ -505,7 +497,9 @@
       mapHost: document.getElementById('map-host'),
       capitalWrap: document.getElementById('capital-wrap'),
       answers: document.querySelector('.answers'),
-      footerNote: document.querySelector('.footer-note'),
+      footerNote: document.getElementById('footer-note'),
+      questionWrap: document.getElementById('question-wrap'),
+      answersWrap: document.getElementById('answers-wrap'),
       capitalPref: document.getElementById('capital-pref'),
       answerBox: document.getElementById('answer-box'),
       hintBox: document.getElementById('hint-box'),
@@ -679,16 +673,19 @@
       state.mode = mode;
       resetProgress();
       resetAnswerArea();
+      el.questionWrap.classList.remove('hidden');
+      el.answersWrap.classList.remove('hidden');
+      el.footerNote.classList.remove('hidden');
       if (mode === 'map') {
         el.modeLabel.textContent = 'モード: 場所クイズ';
-        el.mapWrap.style.display = 'block';
-        el.capitalWrap.style.display = 'none';
-          await loadMap();
+        el.mapWrap.classList.remove('hidden');
+        el.capitalWrap.classList.add('hidden');
+        await loadMap();
       } else {
         el.modeLabel.textContent = 'モード: 県庁所在地クイズ';
-        el.mapWrap.style.display = 'none';
-        el.capitalWrap.style.display = 'grid';
-        }
+        el.mapWrap.classList.add('hidden');
+        el.capitalWrap.classList.remove('hidden');
+      }
       nextQuestion();
     }
 
@@ -704,7 +701,7 @@
       }
       state.currentPref = next;
       if (state.mode === 'map') {
-        el.questionTitle.textContent = `問題 ${state.total + 1}: 「${next}」はどこ？`;
+        el.questionTitle.innerHTML = `問題 ${state.total + 1}<br><span style="font-size:1.35em;color:#0f766e;">${next}</span><br>この都道府県を地図でクリックしてください`; 
       } else {
         el.questionTitle.textContent = `問題 ${state.total + 1}: 「${next}」の県庁所在地は？`;
         el.capitalPref.textContent = next;
@@ -867,22 +864,22 @@
       clearMapMarks();
       if (state.mode === 'map') {
         el.modeLabel.textContent = 'モード: 場所クイズ';
-        el.mapWrap.style.display = 'block';
-        el.capitalWrap.style.display = 'none';
+        el.mapWrap.classList.remove('hidden');
+        el.capitalWrap.classList.add('hidden');
         } else {
         el.modeLabel.textContent = 'モード: 県庁所在地クイズ';
-        el.mapWrap.style.display = 'none';
-        el.capitalWrap.style.display = 'grid';
+        el.mapWrap.classList.add('hidden');
+        el.capitalWrap.classList.remove('hidden');
         }
       nextQuestion();
     }
 
     function backToMenu() {
-      el.questionTitle.parentElement.style.display = 'none';
-      el.mapWrap.style.display = 'none';
-      el.capitalWrap.style.display = 'none';
-      el.answers.style.display = 'none';
-      el.footerNote.style.display = 'none';
+      el.questionWrap.classList.add('hidden');
+      el.mapWrap.classList.add('hidden');
+      el.capitalWrap.classList.add('hidden');
+      el.answersWrap.classList.add('hidden');
+      el.footerNote.classList.add('hidden');
       state.mode = null;
       state.currentPref = null;
       resetProgress();
