@@ -169,6 +169,7 @@
     .question-wrap {
       display: none;
       padding: 1rem 1.5rem .75rem;
+      display: grid;
       gap: .35rem;
     }
     .question-title {
@@ -183,6 +184,7 @@
       position: relative;
       min-height: 560px;
       background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
+      display: none;
     }
     .map-toolbar {
       display: none;
@@ -204,6 +206,7 @@
     }
     .capital-wrap {
       display: none;
+      display: none;
       padding: var(--space-6);
       gap: var(--space-4);
     }
@@ -216,6 +219,7 @@
     .answers {
       display: none;
       padding: 0 var(--space-6) var(--space-6);
+      display: grid;
       gap: var(--space-4);
     }
     .answer-box {
@@ -381,8 +385,8 @@
           </div>
 
           <div class="question-wrap">
-            <div class="question-title" id="question-title">クイズを選んでスタートしてください。</div>
-          </div>
+            <div class="question-title" id="question-title">左のメニューからクイズを選んでください。</div>
+                      </div>
 
           <div class="map-wrap" id="map-wrap">
             <div class="map-toolbar">
@@ -700,7 +704,7 @@
       }
       state.currentPref = next;
       if (state.mode === 'map') {
-        el.questionTitle.innerHTML = `問題 ${state.total + 1}<br><span style="font-size:1.35em;color:#0f766e;">${next}</span><br>この都道府県を地図でクリックしてください`; 
+        el.questionTitle.textContent = `問題 ${state.total + 1}: 「${next}」はどこ？`;
       } else {
         el.questionTitle.textContent = `問題 ${state.total + 1}: 「${next}」の県庁所在地は？`;
         el.capitalPref.textContent = next;
