@@ -129,6 +129,9 @@
     }
     .flash.show{opacity:1;transform:scale(1)}
     canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
+    ruby{ruby-align:center} rt{font-size:.55em;color:#0f766e;font-weight:700;letter-spacing:.03em}
+    .result-msg ruby rt,.answer-box ruby rt{color:#0f766e}
+    .q-main ruby rt{font-size:.45em;color:inherit;opacity:.75}
     @media(max-width:600px){
       .choices{grid-template-columns:1fr 1fr}
       .choice-btn{font-size:.82rem}
@@ -260,6 +263,112 @@
       '沖縄県': { capital: '那覇市', code: '47' }
     };
 
+
+    /* ===== ルビ変換 ===== */
+    const PREF_RUBY = {
+      '北海道':'ほっかいどう',
+      '青森県':'あおもりけん',
+      '岩手県':'いわてけん',
+      '宮城県':'みやぎけん',
+      '秋田県':'あきたけん',
+      '山形県':'やまがたけん',
+      '福島県':'ふくしまけん',
+      '茨城県':'いばらきけん',
+      '栃木県':'とちぎけん',
+      '群馬県':'ぐんまけん',
+      '埼玉県':'さいたまけん',
+      '千葉県':'ちばけん',
+      '東京都':'とうきょうと',
+      '神奈川県':'かながわけん',
+      '新潟県':'にいがたけん',
+      '富山県':'とやまけん',
+      '石川県':'いしかわけん',
+      '福井県':'ふくいけん',
+      '山梨県':'やまなしけん',
+      '長野県':'ながのけん',
+      '岐阜県':'ぎふけん',
+      '静岡県':'しずおかけん',
+      '愛知県':'あいちけん',
+      '三重県':'みえけん',
+      '滋賀県':'しがけん',
+      '京都府':'きょうとふ',
+      '大阪府':'おおさかふ',
+      '兵庫県':'ひょうごけん',
+      '奈良県':'ならけん',
+      '和歌山県':'わかやまけん',
+      '鳥取県':'とっとりけん',
+      '島根県':'しまねけん',
+      '岡山県':'おかやまけん',
+      '広島県':'ひろしまけん',
+      '山口県':'やまぐちけん',
+      '徳島県':'とくしまけん',
+      '香川県':'かがわけん',
+      '愛媛県':'えひめけん',
+      '高知県':'こうちけん',
+      '福岡県':'ふくおかけん',
+      '佐賀県':'さがけん',
+      '長崎県':'ながさきけん',
+      '熊本県':'くまもとけん',
+      '大分県':'おおいたけん',
+      '宮崎県':'みやざきけん',
+      '鹿児島県':'かごしまけん',
+      '沖縄県':'おきなわけん'
+    };
+    const CAP_RUBY  = {
+      '札幌市':'さっぽろし',
+      '青森市':'あおもりし',
+      '盛岡市':'もりおかし',
+      '仙台市':'せんだいし',
+      '秋田市':'あきたし',
+      '山形市':'やまがたし',
+      '福島市':'ふくしまし',
+      '水戸市':'みとし',
+      '宇都宮市':'うつのみやし',
+      '前橋市':'まえばしし',
+      'さいたま市':'さいたまし',
+      '千葉市':'ちばし',
+      '東京':'とうきょう',
+      '横浜市':'よこはまし',
+      '新潟市':'にいがたし',
+      '富山市':'とやまし',
+      '金沢市':'かなざわし',
+      '福井市':'ふくいし',
+      '甲府市':'こうふし',
+      '長野市':'ながのし',
+      '岐阜市':'ぎふし',
+      '静岡市':'しずおかし',
+      '名古屋市':'なごやし',
+      '津市':'つし',
+      '大津市':'おおつし',
+      '京都市':'きょうとし',
+      '大阪市':'おおさかし',
+      '神戸市':'こうべし',
+      '奈良市':'ならし',
+      '和歌山市':'わかやまし',
+      '鳥取市':'とっとりし',
+      '松江市':'まつえし',
+      '岡山市':'おかやまし',
+      '広島市':'ひろしまし',
+      '山口市':'やまぐちし',
+      '徳島市':'とくしまし',
+      '高松市':'たかまつし',
+      '松山市':'まつやまし',
+      '高知市':'こうちし',
+      '福岡市':'ふくおかし',
+      '佐賀市':'さがし',
+      '長崎市':'ながさきし',
+      '熊本市':'くまもとし',
+      '大分市':'おおいたし',
+      '宮崎市':'みやざきし',
+      '鹿児島市':'かごしまし',
+      '那覇市':'なはし'
+    };
+    function rpref(name) {
+      const r=PREF_RUBY[name]; return r?`<ruby>${name}<rt>${r}</rt></ruby>`:name;
+    }
+    function rcap(name) {
+      const r=CAP_RUBY[name]; return r?`<ruby>${name}<rt>${r}</rt></ruby>`:name;
+    }
     /* ===== state ===== */
     let state = {
       mode: null, score: 0, total: 0, used: [],
@@ -463,7 +572,8 @@
     function setChoices(opts, onSelect) {
       ['c0','c1','c2'].forEach((id,i)=>{
         const btn=$id(id);
-        btn.textContent=opts[i];
+        btn.innerHTML = (state.mode==='capital' ? rcap(opts[i]) : rpref(opts[i]));
+        btn.dataset.val = opts[i];
         btn.className='choice-btn';
         btn.disabled=false;
         btn.onclick=()=>{ if(!state.locked) onSelect(opts[i],btn); };
@@ -473,7 +583,7 @@
     function markChoices(clickedBtn, isOk, correctVal) {
       ['c0','c1','c2'].forEach(id=>{
         const btn=$id(id); btn.disabled=true;
-        if(btn.textContent===correctVal) btn.classList.add('reveal');
+        if(btn.dataset.val===correctVal) btn.classList.add('reveal');
         else if(btn===clickedBtn && !isOk) btn.classList.add('sel-ng');
       });
     }
@@ -481,13 +591,13 @@
     function showResultMsg(isOk, correctVal) {
       const el=$id('result-msg');
       if(state.mode==='capital'){
-        el.textContent=isOk
-          ?`⭕ 正解！${state.currentPref} の県庁所在地は ${correctVal} です。`
-          :`❌ ざんねん。${state.currentPref} の県庁所在地は ${correctVal} です。`;
+        el.innerHTML=isOk
+          ?`⭕ 正解！${rpref(state.currentPref)} の<ruby>県庁所在地<rt>けんちょうしょざいち</rt></ruby>は ${rcap(correctVal)} です。`
+          :`❌ ざんねん。${rpref(state.currentPref)} の<ruby>県庁所在地<rt>けんちょうしょざいち</rt></ruby>は ${rcap(correctVal)} です。`;
       } else {
-        el.textContent=isOk
-          ?`⭕ 正解！この県は「${state.currentPref}」です。`
-          :`❌ ざんねん。正解は「${state.currentPref}」でした。`;
+        el.innerHTML=isOk
+          ?`⭕ 正解！この県は「${rpref(state.currentPref)}」です。`
+          :`❌ ざんねん。正解は「${rpref(state.currentPref)}」でした。`;
       }
       el.className='result-msg '+(isOk?'ok':'ng');
       show('result-msg');
@@ -499,9 +609,9 @@
       hide('btn-hint','btn-answer','choices');
       const box=$id('answer-box');
       if(state.mode==='capital'){
-        box.textContent=`答え: ${state.currentPref} の県庁所在地は ${PREFS[state.currentPref].capital} です。`;
+        box.innerHTML=`答え: ${rpref(state.currentPref)} の<ruby>県庁所在地<rt>けんちょうしょざいち</rt></ruby>は ${rcap(PREFS[state.currentPref].capital)} です。`;
       } else {
-        box.textContent=`答え: この県は「${state.currentPref}」です。`;
+        box.innerHTML=`答え: この県は「${rpref(state.currentPref)}」です。`;
         const node=findPrefNode(state.currentPref);
         if(node) node.classList.add('answer-blue');
       }
@@ -570,7 +680,7 @@
       $id('q-num').textContent=`問題 ${state.total+1}`;
 
       if (state.mode==='map') {
-        $id('q-main').innerHTML=`<span style="color:#0f766e;font-size:1.2em">${next}</span>`;
+        $id('q-main').innerHTML=`<span style="color:#0f766e;font-size:1.2em">${rpref(next)}</span>`;
         $id('q-sub').textContent='地図をクリックして答えてください（💡でヒント）';
         show('map-stage');
         enableMapClick();
@@ -584,7 +694,7 @@
           if(node) node.classList.add('answer-blue');
         }, 50);
       } else {
-        $id('q-main').innerHTML=`<span style="color:#7c3aed;font-size:1.1em">${next}</span> の県庁所在地は？`;
+        $id('q-main').innerHTML=`<span style="color:#7c3aed;font-size:1.1em">${rpref(next)}</span> の<ruby>県庁所在地<rt>けんちょうしょざいち</rt></ruby>は？`;
         $id('q-sub').textContent='ヒントを見るか、答えを考えてください';
         hide('map-stage');
       }
@@ -592,7 +702,7 @@
 
     function showFinish() {
       const rate=state.total?Math.round(state.score/state.total*100):0;
-      $id('q-main').textContent=`全問終了！ ${state.score} / ${state.total} 正解（${rate}%）`;
+      $id('q-main').innerHTML=`全問<ruby>終了<rt>しゅうりょう</rt></ruby>！ ${state.score} / ${state.total} <ruby>正解<rt>せいかい</rt></ruby>（${rate}%）`;
       $id('q-sub').textContent='お疲れ様でした！リセットでもう一度遊べます。';
       hide('hint-answer-row','map-stage');
     }
